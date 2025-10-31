@@ -39,7 +39,7 @@ echo -e "${GREEN}==> Installing Hyprland and core components...${NC}"
 HYPRLAND_CORE=(
     hyprland
     hypridle hyprlock hyprutils hyprsunset
-    hyprpaper
+    hyprpaper intel-media-driver libva-intel-driver libva-mesa-driver mesa vulkan-intel vulkan-nouveau vulkan-radeon xf86-video-amdgpu xf86-video-ati xf86-video-nouveau xorg-server xorg-xinit
 )
 
 for pkg in "${HYPRLAND_CORE[@]}"; do
