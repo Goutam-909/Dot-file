@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Temporary image location
+TMP_IMG="/tmp/frozen_screen.png"
+
+# Take a full screenshot (instant capture)
+grim "$TMP_IMG"
+
+# Show the frozen image fullscreen using swayimg or imv
+# while user selects the region using hyprshot
+if command -v imv &> /dev/null; then
+    imv -f "$TMP_IMG" &
+    VIEWER_PID=$!
+elif command -v swayimg &> /dev/null; then
+    swayimg -f "$TMP_IMG" &
+    VIEWER_PID=$!
+else
+    echo "Please install imv or swayimg for screen freeze effect."
+    exit 1
+fi
+
+# Give viewer a short moment to display
+sleep 0.2
+
+# Take region screenshot (from live screen)
+hyprshot -m region
+
+# Close the frozen image viewer
+kill "$VIEWER_PID" 2>/dev/null
+rm -f "$TMP_IMG"

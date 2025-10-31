@@ -1,0 +1,169 @@
+{
+"hyprland/window": {
+    "separate-outputs": false
+  },
+  "hyprland/workspaces": {
+    "format": "{icon}",
+    "on-click": "activate",
+    "format-icons": {
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "urgent": "",
+      "active": "",
+      "default": ""
+    },
+    "sort-by-number": true,
+    "persistent-workspaces": {
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": []
+    }
+  },
+
+"backlight": {
+    "device": "intel_backlight",
+    "rotate": 0,
+    "format": "{icon}  {percent}%",
+    "format-icons": ["", "", "", "", "", "", "", "", ""],
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Brightness1.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Brightness1.sh --dec",
+    "min-length": 6
+},
+  "user": {
+    "format": "  Goutam | ({work_H}hr {work_M} mins ↑) |",
+    "interval": 60,
+    "height": 23,
+    "width": 23,
+    "icon": true,
+    "avatar": "/home/goutam01/.config/waybar/pfp-circle.png",
+  },
+  "tray": {
+    "spacing": 10
+  },
+  "clock": {
+    "tooltip-format": "{:%A, %B %d, %Y}",
+    "format": "{:%I:%M}"
+  },
+  "battery": {
+        "interval":30,
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 20
+        },
+        "format": "{capacity}% {icon}",
+        "format-charging": "{capacity}% 󰂄",
+        "format-plugged": "{capacity}% 󰂄 ",
+        "format-alt": "{time} {icon}",
+        "format-icons": [
+            "󰁻",
+            "󰁼",
+            "󰁾",
+            "󰂀",
+            "󰂂",
+            "󰁹"
+        ],
+    },
+  "network": {
+        "format-disconnected": "󰖪 0% ",
+        "format-ethernet": "󰈀 100% ",
+        "format-linked": "{ifname} (No IP)",
+        "format-wifi": " ",
+        "tooltip-format": "Connected to {essid} {ifname} via {gwaddr}",
+        "on-click": "kitty nmtui"
+  },
+  "pulseaudio": {
+    "format": "{icon}  {volume}%",
+    "format-bluetooth": "{icon} 󰂰 {volume}%",
+    "format-muted": "󰖁",
+    "format-icons": {
+        "headphone": "",
+        "hands-free": "",
+        "headset": "",
+        "phone": "",
+        "portable": "",
+        "car": "",
+        "default": [
+            "", "", "󰕾",  ""
+        ],
+        "ignored-sinks": [
+            "Easy Effects Sink"
+        ],
+    },
+    "scroll-step": 5.0,
+    "on-click-right": "$HOME/.config/waybar/scripts/Volume.sh --toggle",
+    "on-click": "pavucontrol -t 3",
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Volume.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Volume.sh --dec",
+    "tooltip-format": "{icon} {desc} | {volume}%",
+    "smooth-scrolling-threshold": 1,
+  },
+  "custom/power": {
+    "format": "󰐥",
+    "on-click": "/home/goutam01/.config/wlogout/wlogout.sh"
+  },
+  "image": {
+    "path": "/home/goutam01/.config/waybar/archlinux-icon.svg",
+    "size": 20,
+    "interval": 5,
+    "on-click": "/home/goutam01/.config/rofi/launchers/type-3/launcher.sh"
+  },
+
+  "mpris": {
+    "interval": 0.5,
+    /*"format": "{player_icon} ",*/
+    "format": "<i>{dynamic}</i>",
+    "on-click-middle": "playerctl play-pause",
+    "on-click": "playerctl previous",
+    "on-click-right": "playerctl next",
+    "scroll-step": 5.0,
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Volume.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Volume.sh --dec",
+    "smooth-scrolling-threshold": 1,
+    "tooltip": true,
+    "tooltip-format": "{status_icon} {dynamic}\nLeft Click: previous\nMid Click: Pause\nRight Click: Next",
+    "player-icons": {
+        "chromium": "",
+        "default": "",
+        "firefox": "",
+        "kdeconnect": "",
+        "mopidy": "",
+        "mpv": "󰐹",
+        "spotify": "",
+        "vlc": "󰕼",
+    },
+    "status-icons": {
+        "paused": "󰐎",
+        "playing": "",
+        "stopped": "",
+    },
+    // "ignored-players": ["firefox"]*/
+    "max-length": 20,
+  },
+  "custom/cava": {
+    "exec": "$HOME/.config/waybar/scripts/WaybarCava.sh",
+    "interval":0.5,
+    "on-click-middle": "playerctl play-pause",
+    "on-click": "playerctl previous",
+    "on-click-right": "playerctl next",
+    "scroll-step": 5.0,
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Volume.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Volume.sh --dec",
+    "smooth-scrolling-threshold": 1,
+
+  },
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "rotate": 0,
+    "format-icons": {
+        "activated": "󰥔",
+        "deactivated": ""
+    }
+}
+
+}
+

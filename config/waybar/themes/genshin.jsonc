@@ -1,0 +1,13 @@
+{
+	"layer": "top",
+	"position": "top",
+	"margin": "5 10 0",
+    "fixed center": true,
+    "reload_style_on_change": true,
+	"height": 34,
+	"width": 1500,
+    "include": ["~/.config/waybar/modules1.jsonc"],
+	"modules-left": ["clock","group/music"],
+	"modules-center": ["hyprland/workspaces"],
+	"modules-right": ["group/custom-group"]
+}

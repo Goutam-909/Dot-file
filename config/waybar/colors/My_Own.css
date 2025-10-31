@@ -1,0 +1,258 @@
+@import url('../../.cache/wal/colors-waybar.css');
+
+* {
+  font-size:15px;
+  font-family: "CodeNewRoman Nerd Font Propo";
+}
+window#waybar{
+  all:unset;
+}
+
+.modules-center {
+  padding:7px;
+  margin:10 0 0 0;
+  border-radius:10px;
+  background: alpha(@background,.5);
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, .6);
+}
+.modules-left {
+  padding:7px;
+  margin:10 0 0 10;
+  border-radius:10px;
+  background: alpha(@background,.5);
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, .6);
+}
+.modules-right {
+  padding:7px;
+  margin: 10 10 0 0;
+  border-radius:10px;
+  background: alpha(@background,.5);
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, .6);
+}
+tooltip {
+  background:@background;
+  color: @color7;
+}
+#clock:hover, #custom-pacman:hover, #custom-notification:hover,#bluetooth:hover,#network:hover,#battery:hover, #cpu:hover,#memory:hover,#temperature:hover,#custom-wall:hover,#mpris:hover,#pulseaudio:hover,#backlight:hover,#idle_inhibitor:hover{
+transition: all .3s ease;
+color:@color9;
+}
+#custom-notification {
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+}
+#clock{
+padding: 0px 5px;
+color:@color7;
+transition: all .3s ease;
+}
+#custom-pacman{
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+
+}
+#workspaces {
+padding: 0px 5px;
+}
+#workspaces button {
+all:unset;
+padding: 0px 5px;
+color: alpha(@color9,.4);
+transition: all .2s ease;
+}
+#workspaces button:hover {
+color:rgba(0,0,0,0);
+border: none;
+text-shadow: 0px 0px 1.5px rgba(0, 0, 0, .5);
+transition: all 1s ease;
+}
+#workspaces button.active {
+color: @color9;
+border: none;
+text-shadow: 0px 0px 2px rgba(0, 0, 0, .5);
+}
+#workspaces button.empty {
+color: rgba(0,0,0,0);
+border: none;
+text-shadow: 0px 0px 1.5px rgba(0, 0, 0, .2);
+}
+#workspaces button.empty:hover {
+color: rgba(0,0,0,0);
+border: none;
+text-shadow: 0px 0px 1.5px rgba(0, 0, 0, .5);
+transition: all 1s ease;
+}
+#workspaces button.empty.active {
+color: @color9;
+border: none;
+text-shadow: 0px 0px 2px rgba(0, 0, 0, .5);
+}
+#bluetooth{
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+
+}
+#network{
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+
+}
+#battery{
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+
+
+}
+#battery.charging {
+color: #26A65B;
+}
+
+#battery.warning:not(.charging) {
+color: #ffbe61;
+}
+
+#battery.critical:not(.charging) {
+color: #f53c3c;
+animation-name: blink;
+animation-duration: 0.5s;
+animation-timing-function: linear;
+animation-iteration-count: infinite;
+animation-direction: alternate;
+}
+#group-expand{
+padding: 0px 5px;
+transition: all .3s ease;
+}
+#custom-expand{
+padding: 0px 5px;
+color:alpha(@foreground,.2);
+text-shadow: 0px 0px 2px rgba(0, 0, 0, .7);
+transition: all .3s ease;
+}
+#custom-expand:hover{
+color:rgba(255,255,255,.2);
+text-shadow: 0px 0px 2px rgba(255, 255, 255, .5);
+}
+#cpu,#memory,#temperature{
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+
+}
+#custom-endpoint{
+color:transparent;
+text-shadow: 0px 0px 1.5px rgba(0, 0, 0, 1);
+
+}
+
+#backlight{
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+}
+#pulseaudio, #idle_inhibitor{
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+}
+
+
+#tray{
+padding: 0px 5px;
+transition: all .3s ease;
+
+}
+#tray menu * {
+padding: 0px 5px;
+transition: all .3s ease;
+}
+
+#tray menu separator {
+padding: 0px 5px;
+transition: all .3s ease;
+}
+
+#custom-unacademy{
+font-size: 15px;
+background-image: url('/home/goutam01/all_files/logos/U1.png');
+background-position: center;
+background-repeat: no-repeat;
+background-size: contain;
+}
+#custom-playerlabel {
+background:alpha(@background,.5);
+padding: 0px 5px;
+color:@color7;
+transition: all .3s ease;
+border-radius: 10px 10px 10px 10px;
+}
+#custom-ytmusic{
+font-size: 15px;
+background-image: url('/home/goutam01/all_files/logos/Y1.png');
+background-position: center;
+background-repeat: no-repeat;
+background-size: contain;
+}
+#custom-wall {
+padding: 0px 5px;
+transition: all .3s ease;
+color:@color7;
+}
+#mpris,#custom-cava {
+padding: 0 7px;
+border-radius: 10px;
+background: #11111b;
+color: #b4befe;
+box-shadow: rgba(0, 0, 0, 0.116) 2 2 5 2px;
+margin-top: 0px;
+margin-bottom: 0px;
+margin-right: 10px;
+}
+
+#custom-cava, #mpris{
+background: rgb(137,180,250);
+background: radial-gradient(circle, rgba(137,180,250,120) 0%, rgba(142,179,250,120) 6%, rgba(148,226,213,1) 14%, rgba(147,178,250,1) 14%, rgba(155,176,249,1) 18%, rgba(245,194,231,1) 28%, rgba(158,175,249,1) 28%, rgba(181,170,248,1) 58%, rgba(205,214,244,1) 69%, rgba(186,169,248,1) 69%, rgba(195,167,247,1) 72%, rgba(137,220,235,1) 73%, rgba(198,167,247,1) 78%, rgba(203,166,247,1) 100%);
+background-size: 400% 400%;
+animation: gradient_f 9s cubic-bezier(.72,.39,.21,1) infinite;
+text-shadow: 0 0 5px rgba(0, 0, 0, 0.377);
+font-weight: bold;
+color: #fff ;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 30%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradient_f {
+  0% {
+    background-position: 0% 200%;
+  }
+  50% {
+    background-position: 200% 0%;
+  }
+  100% {
+    background-position: 400% 200%;
+  }
+}
+
+@keyframes gradient_f_nh {
+  0% {
+    background-position: 0% 200%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}

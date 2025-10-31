@@ -1,0 +1,64 @@
+
+{
+	// load modules
+	"include": "~/.config/waybar/modules_blur.json",
+	
+	// general settings
+	"position": "top",
+	"margin-top": 8,
+	"margin-bottom": 0,
+	"layer": "top",
+	"margin-left": 8,
+	"margin-right": 8,    
+	"spacing": 10,
+	"fixed-center": true,
+	"exclusive": true,
+	
+	// modules
+	"modules-left": [
+	    "hyprland/workspaces",
+            "wlr/taskbar", "mpd"
+        ],
+        
+        "modules-center": [
+            "clock"
+        ],
+        
+       "modules-right": [
+            "tray",
+            "pulseaudio",
+           "bluetooth",
+           "idle_inhibitor",
+           "battery", 
+           "custom/exit"
+        ],
+	"mpd": {
+	"format": "{stateIcon} {consumeIcon}{randomIcon}{repeatIcon}{singleIcon} {title:.30} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ",
+	"format-disconnected": "Disconnected ",
+	"format-stopped": "{consumeIcon}{randomIcon}{repeatIcon}{singleIcon}Stopped ",
+	"interval": 2,
+	"consume-icons": {
+		"on": " " // Icon shows only when "consume" is on
+	},
+	"random-icons": {
+		"off": "<span color=\"#f53c3c\"></span> ", // Icon grayed out when "random" is off
+		"on": " "
+	},
+	"repeat-icons": {
+		"on": " "
+	},
+	"single-icons": {
+		"on": "1 "
+	},
+	"state-icons": {
+		"paused": "",
+		"playing": ""
+	},
+	"tooltip-format": "MPD (connected)",
+	"tooltip-format-disconnected": "MPD (disconnected)",
+	"on-click": "eww list-windows | grep -q music-widget && eww close music-widget || eww open music-widget"
+
+}
+
+}
+

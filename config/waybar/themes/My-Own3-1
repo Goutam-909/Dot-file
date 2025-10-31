@@ -1,0 +1,148 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 30,
+    "spacing": 4,
+    "margin-top": 6,
+    "margin-left": 10,
+    "margin-right": 10,
+
+    "modules-left": ["clock", "custom/wallpaper", "idle_inhibitor","tray"],
+    "modules-center": ["hyprland/workspaces"],
+    "modules-right": ["network", "pulseaudio","backlight", "battery","custom/power"],
+
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "on-click": "activate",
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "urgent": "",
+            "active": "",
+            "default": ""
+        },
+        "sort-by-number": true,
+        "persistent-workspaces": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": []
+        }
+    },
+
+    "custom/active_toplevel": {
+        "exec": "~/.scripts/active_toplevel.sh",
+        "format": "{}", 
+        "interval": 1,
+        "tooltip": false
+    },
+
+    "clock": {
+        "format": " {:%H:%M}",
+        "format-alt": " {:%a, %d. %b  %H:%M}",
+        "tooltip": false
+    },
+
+
+    "cpu": {
+        "format": "󰻠 {usage}%",
+        "on-click": "alacritty -e btop &",
+        "interval": 1
+    },
+
+    "network": {
+        "interface": "wlan0",
+        "format": "{ifname}",
+        "format-alt": "{ipaddr}",
+        "format-wifi": "{essid}  ",
+        "format-ethernet": "{ifname} ",
+        "format-disconnected": "", //An empty format will hide the module.
+        "format-disconnected": "",
+        "tooltip-format": "{ifname}",
+        "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
+        "tooltip-format-ethernet": "{ifname} ",
+        "max-length": 50
+        //"on-click": "/home/danihek/tmp/iwdrof/iwdrof.sh"
+    },
+
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "rotate": 0,
+        "format-icons": {
+            "activated": "󰥔",
+            "deactivated": ""
+        }
+    },
+
+
+    "memory": {
+        "on-click": "alacritty -e btop &",
+        "format": "  {}%",
+        "interval": 1
+
+    },
+
+    "battery": {
+        "format": "  {capacity}%",
+        "format-charging": "⚡ {capacity}%",
+        "format-plugged": " {capacity}%"
+
+    },
+
+    "pulseaudio": {
+    "format": "{icon}  {volume}%",
+    "format-bluetooth": "{icon} 󰂰 {volume}%",
+    "format-muted": "󰖁",
+    "format-icons": {
+        "headphone": "",
+        "hands-free": "",
+        "headset": "",
+        "phone": "",
+        "portable": "",
+        "car": "",
+        "default": [
+            "", "", "󰕾",  ""
+        ],
+        "ignored-sinks": [
+            "Easy Effects Sink"
+        ],
+    },
+    "scroll-step": 5.0,
+    "on-click-right": "$HOME/.config/waybar/scripts/Volume.sh --toggle",
+    "on-click": "pavucontrol -t 3",
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Volume.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Volume.sh --dec",
+    "tooltip-format": "{icon} {desc} | {volume}%",
+    "smooth-scrolling-threshold": 1,
+},
+    "custom/wallpaper":{
+	    "format": "󰸉",
+        "on-click": "$HOME/.config/waybar/scripts/wallpaperSelect-pywal.sh &",
+        "on-click-right": "$HOME/.config/waybar/scripts/wallpaper-changer.sh -p & $HOME/.config/waybar/scripts/restart_swaync.sh &",
+        "tooltip": true,
+        "tooltip-format": "Left Click: Wallpaper Select Menu\nRight Click: Previous Wallpaper",
+    },
+    "custom/power":{
+	    "format": "⏻",
+        "tooltip": false,
+	    "on-click": "$HOME/.config/wlogout/wlogout.sh"
+    },
+    "tray":{
+        "icon-size": 14,
+        "spacing": 10
+    },
+    "backlight": {
+        "device": "intel_backlight",
+        "rotate": 0,
+        "format": "{icon} {percent}%",
+        "format-icons": ["", "", "", "", "", "", "", "", ""],
+        "on-scroll-up": "$HOME/.config/waybar/scripts/Brightness1.sh --inc",
+        "on-scroll-down": "$HOME/.config/waybar/scripts/Brightness1.sh --dec",
+        "min-length": 6
+    }
+}
+
+

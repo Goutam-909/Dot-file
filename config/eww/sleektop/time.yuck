@@ -1,0 +1,26 @@
+(defpoll time :interval "5s"
+  `date +'{
+    "hour":"%I",
+    "min":"%M",
+    "ampm":"%p",
+    "month":"%B",
+    "date":"%d",
+    "year":"%Y"
+   }'`
+)
+
+(defwidget left_group []
+  (box :orientation "vertical" :class "white-main" :valign "center" :spacing -20
+    (label :class "clock" :halign "center" :text "${time.hour}:${time.min} ${time.ampm}")
+    (label :class "date" :halign "center" :text "${time.month} ${time.date}, ${time.year}")
+  )
+)
+
+(defwindow left_window
+  :stacking "bg"
+  :windowtype "dock"
+  :wm-ignore true
+  :monitor 0
+  :geometry (geometry :x "7%" :y "24%" :width "30%" :height "20%")
+  (left_group)
+)

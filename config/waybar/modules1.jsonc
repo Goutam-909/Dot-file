@@ -1,0 +1,138 @@
+{
+	"hyprland/workspaces": {
+        "format": "{icon}",
+        "on-click": "activate",
+        "all-outputs": true,
+        "format-icons": {
+        "default": "󰫣 ",
+        "active": "󰫢 "
+		}
+	},
+
+	"clock": {
+		"format": "{:%I:%M %p}",
+		"tooltip-format": "<tt><small>{calendar}</small></tt>",
+		"calendar": {
+			"format": {
+				"months": "<span color='#ffead3'><b>{}</b></span>",
+				"weekdays": "<span color='#ffcc66'><b>{}</b></span>",
+				"today": "<span color='#ffcc66'><b><u>{}</u></b></span>"
+			}
+		}
+	},
+
+	"battery": {
+		"states": {
+			"good": 95,
+			"warning": 30,
+			"critical": 20
+		},
+		"format": "{icon} {capacity}   ",
+		"format-charging": " {capacity}  ",
+        "format-plugged": " {capacity}   ",
+        //"format-charging": "󰋠   {capacity}",
+		//"format-plugged": "󰋠    {capacity}",
+		"format-alt": "{time}   {icon}",
+       // "format-icons": ["󱢠 󱢠 󱢠 ", "󱢠 󱢠 󰛞 ", "󱢠 󱢠 󰛞 ", "󱢠 󱢠 󰋑 ", "󱢠 󰛞 󰋑 ", "󱢠 󰛞 󰋑 ", "󱢠 󰋑 󰋑 ", "󰛞 󰋑 󰋑 ", "󰛞 󰋑 󰋑 ", "󰋑 󰋑 󰋑 "]
+		//"format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+		"format-icons": [" ", " ", " ", " ", " "]
+	},
+
+	"network": {
+		"format-wifi": "    {signalStrength}%",
+		"format-ethernet": "{ipaddr}/{cidr}",
+		"format-linked": "{ifname} (No IP)",
+		"format-disconnected": "󰖪 ",
+        "on-click": "kitty nmtui",
+        "tooltip-format":"Network: <big><b>{essid}</b></big>\nSignal strength: <b>{signaldBm}dBm ({bandwidthDownBytes})</b>\nFrequency: <b>{frequency}MHz</b>\nInterface: <b>{ifname}</b>"	
+    },
+
+	"bluetooth": {
+		"format": "󰂯    {status}",
+		"format-disabled": " off",
+		"format-connected": " {num_connections}",
+		"tooltip-format": "{device_alias}",
+		"tooltip-format-connected": " {device_enumerate}",
+		"tooltip-format-enumerate-connected": "{device_alias}",
+		"on-click": "blueman-manager"
+	},
+
+    "group/custom-group": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "transition-left-to-right": false
+        },
+        "modules": [
+            "battery",
+            "bluetooth",
+            "network",
+            "tray"
+        ]
+    },
+
+    "group/music": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "transition-left-to-right": true
+        },
+        "modules": [
+            "pulseaudio",
+            "mpd"
+        ]
+    },
+
+   "mpd": {
+          "format": "{stateIcon} {consumeIcon}{randomIcon}{repeatIcon}{singleIcon} {title:.25} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ",
+	      "format-disconnected": "Disconnected ",
+	      "format-stopped": "{consumeIcon}{randomIcon}{repeatIcon}{singleIcon}Stopped ",
+	      "interval": 2,
+	      "consume-icons": {
+	      "on": " " // Icon shows only when "consume" is on
+	      },
+	"random-icons": {
+		"off": "<span color=\"#f53c3c\"></span> ", // Icon grayed out when "random" is off
+		"on": " "
+	},
+	"repeat-icons": {
+		"on": " "
+	},
+	"single-icons": {
+		"on": "1 "
+	},
+	"state-icons": {
+		"paused": "",
+		"playing": ""
+	},
+	"tooltip-format": "MPD (connected)",
+	"tooltip-format-disconnected": "MPD (disconnected)",
+	"on-click": "eww list-windows | grep -q music-widget && eww close music-widget || eww open music-widget"
+
+},
+
+   "pulseaudio": {
+    "format": "{icon} {volume}% 󰋎 ",
+    "format-bluetooth": "󰂱 {volume}%",
+    "format-muted": "󰖁",
+    "on-click-right": "$HOME/.config/waybar/scripts/Volume.sh --toggle",
+    "on-click": "pavucontrol -t 3",
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Volume.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Volume.sh --dec",
+    "scroll-step": 1,
+
+    "ignored-sinks": ["Easy Effects Sink"],
+    "format-icons": {
+      "headphone": "",
+      "hands-free": "",
+      "headset": "󰋎",
+      "phone": "",
+      "portable": "",
+      "car": "",
+      "default": ["󰖀", "󰕾"]
+    },
+    "tooltip-format": "Volume: {volume}%"
+  }
+
+}
+

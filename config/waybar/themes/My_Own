@@ -1,0 +1,13 @@
+{
+	"include": "~/.config/waybar/My_Own_modules",
+	"layer": "top",
+	"position": "top",
+	"reload_style_on_change": true,
+	"modules-left": ["clock","custom/pacman","tray","custom/unacademy","custom/ytmusic","custom/cava"],
+	"modules-center": ["hyprland/workspaces"],
+	"modules-right": ["group/expand","custom/wall","pulseaudio","backlight","bluetooth","network","battery","custom/notification"],
+
+
+
+} 
+

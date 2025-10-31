@@ -1,0 +1,132 @@
+/* Web Search - Rofi Theme */
+configuration {
+    font:                       "JetBrains Mono Nerd Font 10";
+    show-icons:                 true;
+    hover-select:               true;
+}
+
+/* Import pywal colors */
+@import "~/.cache/wal/colors-rofi-dark.rasi"
+@import "default.rasi"
+/* Fallback colors if pywal not available */
+
+/* Window */
+window {
+    location:                   center;
+    anchor:                     center;
+    border:                     1px;
+    border-radius:              30px;
+    width:                      800px;
+    transparency:               "real";
+    padding:                    0px;
+}
+
+/* Main Box */
+mainbox {
+    enabled:                    true;
+    spacing:                    20px;
+    padding:                    20px;
+    background-color:           transparent;
+    children:                   [ "inputbar", "message", "listview" ];
+}
+
+/* Inputbar */
+inputbar {
+    children:                   [ "textbox-icon", "entry" ];
+    border-radius:              12px;
+   /* background-color:           @shade-bg;*/
+    text-color:                 @text;
+    spacing:                    0px;
+    margin:                     0px;
+    padding:                    14px;
+}
+
+textbox-icon {
+    expand:                     false;
+    background-color:           transparent;
+    text-color:                 inherit;
+    str:                        "  ";
+}
+
+/* Entry */
+entry {
+    cursor:                     text;
+    expand:                     true;
+    placeholder-color:          rgba(205, 214, 244, 0.5);
+    placeholder:                "Type to search...";
+    background-color:           transparent;
+    text-color:                 inherit;
+}
+
+/* Message - Current engine indicator */
+message {
+    enabled:                    true;
+    margin:                     0px;
+    padding:                    12px;
+    border-radius:              12px;
+    background-color:           @shade-bg;
+    text-color:                 @text;
+}
+
+textbox {
+    background-color:           transparent;
+    text-color:                 inherit;
+    vertical-align:             0.5;
+    horizontal-align:           0.0;
+}
+
+/* Listview - Logo boxes in 2 rows, 4 columns */
+listview {
+    enabled:                    true;
+    columns:                    4;
+    lines:                      2;
+    cycle:                      false;
+    dynamic:                    false;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               true;
+    fixed-columns:              true;
+
+    spacing:                    12px;
+    margin:                     0px;
+    padding:                    0px;
+    background-color:           transparent;
+}
+
+/* Element - Logo boxes */
+element {
+    enabled:                    true;
+    cursor:                     pointer;
+    background-color:           @shade-bg;
+    text-color:                 @text;
+    border-radius:              12px;
+    padding:                    30px;
+    border:                     2px solid;
+    border-color:               transparent;
+    orientation:                vertical;
+}
+
+element selected {
+    background-color:           @selected;
+    text-color:                 @active;
+    border-color:               @active;
+}
+
+element-icon {
+    background-color:           transparent;
+    text-color:                 inherit;
+    size:                       56px;
+    cursor:                     inherit;
+    horizontal-align:           0.5;
+    vertical-align:             0.5;
+}
+
+element-text {
+    enabled:                    false;
+    background-color:           transparent;
+    text-color:                 inherit;
+    cursor:                     inherit;
+    vertical-align:             0.5;
+    horizontal-align:           0.5;
+}

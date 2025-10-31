@@ -1,0 +1,126 @@
+@import '../../.cache/wal/colors-waybar.css';
+
+@define-color bg-color  @color7;
+@define-color c1 	@color2;
+@define-color c2 	@color13;
+
+* {
+  border: none;
+  border-radius: 0;
+  font-family: "fira code Nerd Font";
+  font-weight: bold;
+  font-size: 11px;
+  min-height: 0px;
+}
+
+window#waybar {
+  background-color: alpha(@c2, 0.99);
+  border-radius: 10px;
+}
+
+#workspaces button {
+min-width: 10px;
+min-height: 10px;
+border-radius: 500px;
+background: @bg-color;
+transition: min-width 0.3s ease;
+margin: 7px 5px;
+}
+
+#workspaces button.active {
+min-width: 20px;
+background: @c1;
+}
+
+#custom-active_workspace {
+background-color: @bg-color;
+color: @c1;
+padding: 5px 10px;
+border-radius: 8px;
+
+padding: 0 10px;
+margin: 6px 0;
+color: @c1;
+border-radius: 10px;
+}
+
+#custom-active_toplevel {
+background-color: @bg-color;
+padding: 0 10px;
+margin: 6px 0;
+color: @c1;
+border-radius: 10px;
+}
+
+#custom-wallpaper,
+#idle_inhibitor,
+#custom-power,
+#clock,
+#battery,
+#cpu,
+#memory,
+#temperature,
+#network,
+#pulseaudio,
+#tray,
+#backlight {
+padding: 0 10px;
+margin: 6px 0;
+color: @c1;
+border-radius: 10px;
+}
+
+#idle_inhibitor{
+background-color: @bg-color;
+}
+
+#clock {
+background-color: @bg-color;
+margin-left: 10px;
+}
+
+#network,
+#tray,
+#backlight{
+background-color: @bg-color;
+}
+
+#battery {
+background-color: @bg-color;
+}
+
+#battery.charging {
+background-color: #CB841D;
+}
+
+#cpu {
+background-color: @bg-color;
+}
+
+#memory {
+background-color: @bg-color;
+}
+
+#temperature {
+background-color: @bg-color;
+}
+
+#temperature.critical {
+background-color: #CA99A7;
+}
+
+#pulseaudio {
+background-color: @bg-color;
+}
+
+#custom-wallpaper{
+background-color: @bg-color;
+padding-right: 12px;
+}
+#custom-power{
+background-color: @bg-color;
+margin-right: 10px;
+padding-top:5px;
+padding-bottom:5px;
+padding-right: 12px;
+}

@@ -1,0 +1,233 @@
+{
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "format-icons": {
+            "active": "",
+            "default": "",
+            "empty": ""
+        },
+        "persistent-workspaces": {
+            "*": [ 1,2,3,4,5 ]
+        }
+    },
+    "custom/notification": {
+        "tooltip": false,
+        "format": "",
+        "on-click": "swaync-client -t -sw",
+        "escape": true
+    },
+    "clock": {
+        "format": "{:%I:%M:%S %p} ",
+        "interval": 1,   
+        "tooltip-format": "<tt>{calendar}</tt>",
+        "calendar": {
+            "format": {
+                "today": "<span color='#fAfBfC'><b>{}</b></span>"
+            }
+        },
+        "actions": {
+            "on-click-right": "shift_down",
+            "on-click": "shift_up"
+        }
+    },
+    "network": {
+        "format-disconnected": "󰖪 0% ",
+        "format-ethernet": "󰈀 100% ",
+        "format-linked": "{ifname} (No IP)",
+        "format-wifi": " ",
+        "tooltip-format": "Connected to {essid} {ifname} via {gwaddr}",
+        "on-click": "kitty nmtui"
+    },
+    "bluetooth": {
+        "format-on": "󰂯",
+        "format-off": "BT-off",
+        "format-disabled": "󰂲",
+        "format-connected-battery": "{device_battery_percentage}% 󰂯",
+        "format-alt": "{device_alias} 󰂯",
+        "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
+        "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
+        "tooltip-format-enumerate-connected": "{device_alias}\n{device_address}",
+        "tooltip-format-enumerate-connected-battery": "{device_alias}\n{device_address}\n{device_battery_percentage}%",
+        "on-click-right": "blueman-manager"
+    }, 
+    "battery": {
+        "interval":30,
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 20
+        },
+        "format": "{capacity}% {icon}",
+        "format-charging": "{capacity}% 󰂄",
+        "format-plugged": "{capacity}% 󰂄 ",
+        "format-alt": "{time} {icon}",
+        "format-icons": [
+            "󰁻",
+            "󰁼",
+            "󰁾",
+            "󰂀",
+            "󰂂",
+            "󰁹"
+        ],
+    },
+    "custom/pacman": {
+        "format": "󰅢 {}",
+        "interval": 30,   
+        "exec": "checkupdates | wc -l",
+        "exec-if": "exit 0",
+        "on-click": "kitty sh -c 'yay -Syu; echo Done - Press enter to exit; read'; pkill -SIGRTMIN+8 waybar",
+        "signal": 8,
+        "tooltip": false,
+    },
+"custom/expand": {
+    "format": "",
+    "tooltip": false
+},
+"custom/endpoint":{
+    "format": "|",
+    "tooltip": false
+},
+"group/expand": {
+    "orientation": "horizontal",
+    "drawer": {
+        "transition-duration": 600,
+        "transition-to-left": true,
+        "click-to-reveal": true
+    },
+    "modules": ["custom/expand", "custom/colorpicker","cpu","memory","temperature","idle_inhibitor","custom/endpoint"],
+},
+
+"backlight": {
+    "device": "intel_backlight",
+    "rotate": 0,
+    "format": "{icon} {percent}%",
+    "format-icons": ["", "", "", "", "", "", "", "", ""],
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Brightness1.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Brightness1.sh --dec",
+    "min-length": 6
+},
+"custom/unacademy": {
+    "format":"    ",
+    "tooltip": false,
+    "on-click": "zen-browser --new-window https://unacademy.com",
+},
+/*"custom/playerlabel": {
+    "exec": "playerctl -a metadata --format '{\"text\": \"{{artist}} - {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
+    "format": "<span>󰎈 {} 󰎈</span>",
+    "max-length": 40,
+    "on-click": "",
+    "return-type": "json"
+},*/
+
+"mpris": {
+    "interval": 0.5,
+    /*"format": "{player_icon} ",*/
+    "format": "<i>{dynamic}</i>",
+    "on-click-middle": "playerctl play-pause",
+    "on-click": "playerctl previous",
+    "on-click-right": "playerctl next",
+    "scroll-step": 5.0,
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Volume.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Volume.sh --dec",
+    "smooth-scrolling-threshold": 1,
+    "tooltip": true,
+    "tooltip-format": "{status_icon} {dynamic}\nLeft Click: previous\nMid Click: Pause\nRight Click: Next",
+    "player-icons": {
+        "chromium": "",
+        "default": "",
+        "firefox": "",
+        "kdeconnect": "",
+        "mopidy": "",
+        "mpv": "󰐹",
+        "spotify": "",
+        "vlc": "󰕼",
+    },
+    "status-icons": {
+        "paused": "󰐎",
+        "playing": "",
+        "stopped": "",
+    },
+    // "ignored-players": ["firefox"]*/
+    "max-length": 20,
+},
+"custom/cava": {
+    "exec": "$HOME/.config/waybar/scripts/WaybarCava.sh",
+    "interval":0.5,
+    "on-click-middle": "playerctl play-pause",
+    "on-click": "playerctl previous",
+    "on-click-right": "playerctl next",
+    "scroll-step": 5.0,
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Volume.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Volume.sh --dec",
+    "smooth-scrolling-threshold": 1,
+
+},
+"idle_inhibitor": {
+    "format": "{icon}",
+    "rotate": 0,
+    "format-icons": {
+        "activated": "󰥔",
+        "deactivated": ""
+    }
+},
+
+"custom/ytmusic": {
+    "format":"    ",
+    "tooltip": false,
+    "on-click": "zen-browser --new-window https://music.youtube.com",
+},
+
+"pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-bluetooth": "{icon} 󰂰 {volume}%",
+    "format-muted": "󰖁",
+    "format-icons": {
+        "headphone": "",
+        "hands-free": "",
+        "headset": "",
+        "phone": "",
+        "portable": "",
+        "car": "",
+        "default": [
+            "", "", "󰕾",  ""
+        ],
+        "ignored-sinks": [
+            "Easy Effects Sink"
+        ],
+    },
+    "scroll-step": 5.0,
+    "on-click-right": "$HOME/.config/waybar/scripts/Volume.sh --toggle",
+    "on-click": "pavucontrol -t 3",
+    "on-scroll-up": "$HOME/.config/waybar/scripts/Volume.sh --inc",
+    "on-scroll-down": "$HOME/.config/waybar/scripts/Volume.sh --dec",
+    "tooltip-format": "{icon} {desc} | {volume}%",
+    "smooth-scrolling-threshold": 1,
+},
+
+"custom/wall": {
+    "format": " ",
+    "on-click": "$HOME/.config/waybar/scripts/wallpaperSelect-pywal.sh &",
+    "on-click-right": "$HOME/.config/waybar/scripts/wallpaper-changer.sh -p & $HOME/.config/waybar/scripts/restart_swaync.sh &",
+    "tooltip": false,
+    "tooltip-format": "Left Click: Wallpaper Menu\nMiddle Click: Random wallpaper\nRight Click: Waybar Styles Menu",
+},
+
+
+
+"cpu": {
+    "format": "󰻠",
+    "tooltip": true
+},
+"memory": {
+    "format": ""
+},
+"temperature": {
+    "critical-threshold": 80,
+    "format": "",
+},
+"tray": {
+    "icon-size": 14,
+    "spacing": 10
+},
+
+}

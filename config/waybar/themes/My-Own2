@@ -1,0 +1,19 @@
+{
+	"include": "$HOME/.config/waybar/modules2",
+	"layer": "top",
+	"height": 32,
+	"spacing": 5,
+	// Choose the order of the modules
+	"modules-left": ["image", "hyprland/workspaces"],
+	"modules-center": ["user","custom/cava"],
+	"modules-right": [
+	  "tray",
+	  "idle_inhibitor",
+	  "pulseaudio",
+	  "backlight",
+	  "network",
+	  "battery",
+	  "clock",
+	  "custom/power"
+	],
+}
