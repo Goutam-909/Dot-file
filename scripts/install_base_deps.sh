@@ -38,9 +38,9 @@ BASE_GTK_DEPS=(
     # GLib and core GNOME libraries
     glib2 glib-networking gobject-introspection
     
-    # Theme engines and styling
+    # Theme engines and styling gtk-engine-murrine
     adwaita-icon-theme hicolor-icon-theme
-    gtk-engine-murrine sassc
+    sassc
     
     # Desktop integration
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-kde

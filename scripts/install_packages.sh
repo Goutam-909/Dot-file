@@ -58,7 +58,7 @@ ESSENTIAL_TOOLS=(
     starship fastfetch
     
     # Color/theming
-    python-pywal python-pillow python-opencv
+    python-pywal python-pillow python-opencv bc
     
     # Network
     nm-connection-editor plasma-nm
