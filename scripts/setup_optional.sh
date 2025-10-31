@@ -134,7 +134,7 @@ if [[ "$setup_sb" =~ ^[Yy]$ ]]; then
         echo
         read -rp "Create and enroll Secure Boot keys now? (y/n): " enroll_keys
         if [[ "$enroll_keys" =~ ^[Yy]$ ]]; then
-            if sudo sbctl create-keys && sudo sbctl enroll-keys --microsoft; then
+            if sudo sbctl create-keys && sudo sbctl enroll-keys -m && sbctl verify | sed 's/✗ /sbctl sign -s /e' && sbctl verify | sed -E 's|^.* (/.+) is not signed$|sbctl sign -s "\1"|e' && sbctl sign -s -o /usr/lib/systemd/boot/efi/systemd-bootx64.efi.signed /usr/lib/systemd/boot/efi/systemd-bootx64.efi; then
                 echo -e "${GREEN}✅ Secure Boot keys enrolled${NC}"
                 echo -e "${YELLOW}⚠ Reboot and enable Secure Boot in BIOS/UEFI${NC}"
             else
