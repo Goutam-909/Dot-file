@@ -4,14 +4,19 @@ A comprehensive, modular Arch Linux + Hyprland configuration with QuickShell, fe
 
 ## ✨ Features
 
-- 🚀 **QuickShell** - Modern Qt6-based compositor
+- 🚀 **QuickShell** - Modern Qt6-based shell
 - 🎨 **Material You** - Dynamic color theming based on wallpapers
-- 🪟 **Hyprland** - Tiling Wayland compositor
+- 🪟 **Hyprland** - Tiling Wayland compositor with multi-GPU support
 - 🎯 **Modular Installation** - Choose what you need
 - 📦 **Universal Setup** - Works from minimal to full DE
 - 🔒 **Secure Boot** - Optional sbctl integration
 - 🎮 **Tablet Support** - OpenTabletDriver included
 - 💾 **Auto-backup** - Preserves existing configs
+- 🐳 **Flatpak Support** - Optional Flathub integration
+- 🖥️ **SDDM** - Beautiful display manager
+- 🐱 **Kitty Terminal** - GPU-accelerated terminal
+- ⚡ **Error Recovery** - Tracks failures, continues installation
+- 🛑 **Smart Interrupts** - Ctrl+C twice to exit, once to retry
 
 ## 📋 Requirements
 
@@ -35,7 +40,7 @@ chmod +x main.sh
 
 The installer presents 7 options:
 
-1. **Fresh install** - No DE, just dependencies
+1. **Fresh install** - No DE, just dependencies + drivers
 2. **Install GNOME + Hyprland** - Full GNOME first, then Hyprland
 3. **Use existing GNOME** - Keep GNOME, add Hyprland
 4. **Packages only** - Install all packages without configs
@@ -50,16 +55,17 @@ dotfiles/
 ├── main.sh                      # Main launcher
 ├── scripts/
 │   ├── install_base_deps.sh     # GTK/Qt deps without GNOME bloat
-│   ├── install_packages.sh      # Core Hyprland packages
+│   ├── install_packages.sh      # Core Hyprland + drivers + SDDM
 │   ├── install_gnome.sh         # Optional GNOME installation
 │   ├── cleanup_gnome.sh         # Remove GNOME default apps
-│   ├── setup_optional.sh        # NVIDIA, tablets, security
+│   ├── setup_optional.sh        # NVIDIA, tablets, security, extras
 │   └── user_setup.sh            # Copy configs & set permissions
 ├── config/                      # All .config files
 │   ├── hypr/
 │   ├── quickshell/
 │   ├── rofi/
 │   ├── matugen/
+│   ├── kitty/
 │   └── ...
 ├── local/                       # .local files
 │   └── ...
@@ -81,23 +87,38 @@ Essential libraries for GTK/Qt apps without full desktop environment:
 - **Authentication**: polkit, gnome-keyring
 - **Network**: NetworkManager, network-manager-applet
 - **Codecs**: gstreamer plugins
+- **Audio**: pipewire, pipewire-pulse, wireplumber
+
+### Graphics Drivers (Multi-GPU)
+
+Automatically installs drivers for all GPU types:
+
+- **Intel**: intel-media-driver, libva-intel-driver, vulkan-intel
+- **AMD**: libva-mesa-driver, vulkan-radeon, xf86-video-amdgpu
+- **NVIDIA**: vulkan-nouveau, xf86-video-nouveau (proprietary optional)
+- **Universal**: mesa, vulkan-tools, xorg-server
 
 ### Core Hyprland Stack
 
-- **Compositor**: hyprland, hypridle, hyprlock, hyprpaper
+- **Compositor**: hyprland, hypridle, hyprlock, hyprpaper, hyprsunset
+- **Display Manager**: SDDM (auto-enabled)
+- **Terminal**: Kitty
 - **Shell**: quickshell (AUR)
+- **File Manager**: Dolphin (with PDF/video thumbnails)
 - **Launcher**: rofi-wayland
 - **Theming**: python-pywal, matugen, Material You colors
-- **Tools**: wlogout, cliphist, brightnessctl
+- **Tools**: wlogout, cliphist, brightnessctl, ark
+- **Fonts**: Material Symbols, JetBrains Mono Nerd, Twemoji
 
 ### Optional Components
 
-- **NVIDIA drivers** (if detected)
+- **NVIDIA drivers** (proprietary, if detected)
 - **OpenTabletDriver** (for drawing tablets)
 - **KeePassXC** (password manager)
 - **VeraCrypt** (disk encryption)
 - **Secure Boot** (sbctl)
-- **Additional apps** (Firefox, Kate, Dolphin, etc.)
+- **Flatpak + Flathub** (universal app support)
+- **Additional apps** (Firefox, Kate, Dolphin, VLC, etc.)
 
 ## 🎨 Theming System
 
@@ -133,8 +154,8 @@ env = XDG_MENU_PREFIX,plasma-
 | Key Combo | Action |
 |-----------|--------|
 | `SUPER + Q` | Application launcher |
-| `SUPER + Return` | Terminal |
-| `SUPER + E` | File manager |
+| `SUPER + Return` | Kitty terminal |
+| `SUPER + E` | Dolphin file manager |
 | `SUPER + W` | Close window |
 | `SUPER + M` | Exit Hyprland |
 | `SUPER + V` | Toggle floating |
@@ -153,6 +174,29 @@ Includes:
 - opencv-python
 - Additional dependencies from `sdata/uv/requirements.txt`
 
+## 🛡️ Error Handling
+
+### Smart Installation
+- Automatically skips already-installed packages
+- Tracks failed installations
+- Shows summary at the end
+- Continues even if some packages fail
+
+### Interrupt Control
+- **Press Ctrl+C once**: Prompt to retry or continue
+- **Press Ctrl+C twice**: Exit installation
+
+### Error Recovery
+All failed packages are listed at the end:
+```
+⚠ Some packages failed to install:
+Failed official packages:
+  - package-name-1
+  - package-name-2
+Failed AUR packages:
+  - aur-package-1
+```
+
 ## 🔄 Updating
 
 To update your dotfiles:
@@ -165,6 +209,13 @@ git pull
 ```
 
 ## 🆘 Troubleshooting
+
+### SDDM not starting
+
+```bash
+sudo systemctl enable sddm.service
+sudo systemctl start sddm.service
+```
 
 ### QuickShell not starting
 
@@ -197,6 +248,20 @@ grep "QT_QPA" ~/.config/hypr/hyprland.conf
 ~/.config/quickshell/ii/scripts/colors/applycolor.sh
 ```
 
+### Dolphin thumbnails not working
+
+Ensure thumbnail packages are installed:
+```bash
+sudo pacman -S kdegraphics-thumbnailers ffmpegthumbs
+```
+
+### Flatpak apps not visible
+
+```bash
+# Add Flatpak apps to menu
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -215,6 +280,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [QuickShell](https://github.com/outfoxxed/quickshell)
 - [Material You Color](https://github.com/T-Dynamos/materialyoucolor-python)
 - [Matugen](https://github.com/InioX/matugen)
+- [SDDM](https://github.com/sddm/sddm)
+- [Kitty](https://sw.kovidgoyal.net/kitty/)
 
 ## 📸 Screenshots
 
@@ -223,6 +290,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## ⚠️ Disclaimer
 
 This configuration is tailored to my personal workflow. Please review scripts before running them. Always backup your data before major system changes.
+
+The installation scripts will:
+- ✅ Skip packages already installed
+- ✅ Track and report failures
+- ✅ Continue even if some packages fail
+- ✅ Create backups of existing configs
+- ✅ Set correct permissions automatically
 
 ---
 
