@@ -9,14 +9,38 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; NC='\033[0m'
 
+# Error tracking
+declare -a FAILED_PACKAGES=()
+CTRL_C_COUNT=0
+
+# Trap Ctrl+C
+trap 'handle_interrupt' INT
+
+handle_interrupt() {
+    CTRL_C_COUNT=$((CTRL_C_COUNT + 1))
+    if [[ $CTRL_C_COUNT -eq 1 ]]; then
+        echo -e "\n${YELLOW}⚠ Interrupt detected. Press Ctrl+C again to exit or wait to continue...${NC}"
+        sleep 3
+        CTRL_C_COUNT=0
+    else
+        echo -e "\n${RED}Exiting...${NC}"
+        exit 130
+    fi
+}
+
 install_if_missing() {
     local pkg="$1"
     if ! pacman -Q "$pkg" &>/dev/null; then
         echo -e "${GREEN}Installing $pkg...${NC}"
-        sudo pacman -S --noconfirm --needed "$pkg"
+        if ! sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
+            echo -e "${RED}✗ Failed to install $pkg${NC}"
+            FAILED_PACKAGES+=("$pkg")
+            return 1
+        fi
     else
         echo -e "${YELLOW}✓ $pkg already installed${NC}"
     fi
+    return 0
 }
 
 echo -e "${GREEN}=======================================${NC}"
@@ -26,7 +50,10 @@ echo
 
 # Update system first
 echo -e "${GREEN}==> Updating system...${NC}"
-sudo pacman -Syu --noconfirm
+if ! sudo pacman -Syu --noconfirm; then
+    echo -e "${RED}✗ System update failed${NC}"
+    FAILED_PACKAGES+=("system-update")
+fi
 
 # Essential GTK/GNOME dependencies (without full GNOME)
 echo -e "${GREEN}==> Installing GTK and essential libraries...${NC}"
@@ -38,9 +65,9 @@ BASE_GTK_DEPS=(
     # GLib and core GNOME libraries
     glib2 glib-networking gobject-introspection
     
-    # Theme engines and styling gtk-engine-murrine
+    # Theme engines and styling
     adwaita-icon-theme hicolor-icon-theme
-    sassc
+    gtk-engine-murrine sassc
     
     # Desktop integration
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-kde
@@ -72,7 +99,7 @@ BASE_GTK_DEPS=(
 )
 
 for pkg in "${BASE_GTK_DEPS[@]}"; do
-    install_if_missing "$pkg"
+    install_if_missing "$pkg" || true
 done
 
 # Qt dependencies for QuickShell
@@ -86,7 +113,7 @@ QT_DEPS=(
 )
 
 for pkg in "${QT_DEPS[@]}"; do
-    install_if_missing "$pkg"
+    install_if_missing "$pkg" || true
 done
 
 # Wayland essentials
@@ -100,7 +127,7 @@ WAYLAND_DEPS=(
 )
 
 for pkg in "${WAYLAND_DEPS[@]}"; do
-    install_if_missing "$pkg"
+    install_if_missing "$pkg" || true
 done
 
 # System utilities
@@ -115,7 +142,16 @@ SYSTEM_UTILS=(
 )
 
 for pkg in "${SYSTEM_UTILS[@]}"; do
-    install_if_missing "$pkg"
+    install_if_missing "$pkg" || true
 done
 
-echo -e "${GREEN}✅ Base dependencies installed successfully!${NC}"
+# Summary
+echo
+if [[ ${#FAILED_PACKAGES[@]} -eq 0 ]]; then
+    echo -e "${GREEN}✅ Base dependencies installed successfully!${NC}"
+else
+    echo -e "${YELLOW}⚠ Some packages failed to install:${NC}"
+    printf '  - %s\n' "${FAILED_PACKAGES[@]}"
+    echo
+    echo -e "${YELLOW}You can try installing failed packages manually later.${NC}"
+fi
