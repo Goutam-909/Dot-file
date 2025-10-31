@@ -118,6 +118,7 @@ fi
 mkdir -p "$HOME/.cache/quickshell"
 mkdir -p "$HOME/.cache/matugen"
 mkdir -p "$HOME/.cache/hypr"
+xdg-user-dirs-update
 
 echo
 echo -e "${GREEN}=======================================${NC}"
