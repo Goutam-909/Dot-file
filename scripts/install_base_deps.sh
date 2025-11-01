@@ -29,11 +29,11 @@ handle_interrupt() {
     CTRL_C_TIME=$current_time
     
     if [[ $CTRL_C_COUNT -eq 1 ]]; then
-        echo -e "\n${YELLOW}⚠ Interrupt detected! Press Ctrl+C again within 2 seconds to exit completely.${NC}"
+        echo -e "\n${YELLOW}⚠ Interrupt detected! Press Ctrl+C again within 2 seconds to exit.${NC}"
         return 1
     else
-        echo -e "\n${RED}✗ Double interrupt detected. Exiting entire script...${NC}"
-        kill -TERM -$$ 2>/dev/null || exit 130
+        echo -e "\n${RED}Double interrupt detected. Exiting...${NC}"
+        exit 130
     fi
 }
 
@@ -57,8 +57,7 @@ install_if_missing() {
         
         if [[ $? -eq 130 ]] || [[ $CTRL_C_COUNT -gt 0 ]]; then
             if [[ $CTRL_C_COUNT -ge 2 ]]; then
-                echo -e "${RED}✗ Exiting entire script due to double interrupt...${NC}"
-                kill -TERM -$$ 2>/dev/null || exit 130
+                exit 130
             fi
             echo -e "${YELLOW}Retrying $pkg...${NC}"
             CTRL_C_COUNT=0
