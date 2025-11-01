@@ -12,50 +12,114 @@ GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; BLUE='\033[1;34m'; NC
 declare -a FAILED_PACKAGES=()
 declare -a FAILED_AUR=()
 CTRL_C_COUNT=0
+CTRL_C_TIME=0
 
 # Trap Ctrl+C
 trap 'handle_interrupt' INT
 
 handle_interrupt() {
-    CTRL_C_COUNT=$((CTRL_C_COUNT + 1))
-    if [[ $CTRL_C_COUNT -eq 1 ]]; then
-        echo -e "\n${YELLOW}⚠ Interrupt detected. Press Ctrl+C again to exit or wait to continue...${NC}"
-        sleep 3
+    local current_time=$(date +%s)
+    
+    # Reset counter if more than 2 seconds passed
+    if [[ $((current_time - CTRL_C_TIME)) -gt 2 ]]; then
         CTRL_C_COUNT=0
+    fi
+    
+    CTRL_C_COUNT=$((CTRL_C_COUNT + 1))
+    CTRL_C_TIME=$current_time
+    
+    if [[ $CTRL_C_COUNT -eq 1 ]]; then
+        echo -e "\n${YELLOW}⚠ Interrupt detected! Press Ctrl+C again within 2 seconds to exit completely.${NC}"
+        return 1  # Return to retry the command
     else
-        echo -e "\n${RED}Exiting...${NC}"
-        exit 130
+        echo -e "\n${RED}✗ Double interrupt detected. Exiting entire script...${NC}"
+        # Kill the entire script process tree
+        kill -TERM -$$ 2>/dev/null || exit 130
     fi
 }
 
 install_if_missing() {
     local pkg="$1"
-    if ! pacman -Q "$pkg" &>/dev/null; then
-        echo -e "${GREEN}Installing $pkg...${NC}"
-        if ! sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
-            echo -e "${RED}✗ Failed to install $pkg${NC}"
-            FAILED_PACKAGES+=("$pkg")
-            return 1
-        fi
-    else
+    local max_retries=3
+    local retry_count=0
+    
+    if pacman -Q "$pkg" &>/dev/null; then
         echo -e "${YELLOW}✓ $pkg already installed${NC}"
+        return 0
     fi
-    return 0
+    
+    while [[ $retry_count -lt $max_retries ]]; do
+        echo -e "${GREEN}Installing $pkg... (attempt $((retry_count + 1))/$max_retries)${NC}"
+        
+        if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
+            echo -e "${GREEN}✅ $pkg installed successfully${NC}"
+            return 0
+        fi
+        
+        # Check if interrupted
+        if [[ $? -eq 130 ]] || [[ $CTRL_C_COUNT -gt 0 ]]; then
+            if [[ $CTRL_C_COUNT -ge 2 ]]; then
+                echo -e "${RED}✗ Exiting entire script due to double interrupt...${NC}"
+                kill -TERM -$$ 2>/dev/null || exit 130
+            fi
+            echo -e "${YELLOW}Retrying $pkg...${NC}"
+            CTRL_C_COUNT=0
+            retry_count=$((retry_count + 1))
+            continue
+        fi
+        
+        retry_count=$((retry_count + 1))
+        if [[ $retry_count -lt $max_retries ]]; then
+            echo -e "${YELLOW}Retry $retry_count/$max_retries for $pkg...${NC}"
+            sleep 1
+        fi
+    done
+    
+    echo -e "${RED}✗ Failed to install $pkg after $max_retries attempts${NC}"
+    FAILED_PACKAGES+=("$pkg")
+    return 1
 }
 
 install_aur_if_missing() {
     local pkg="$1"
-    if ! yay -Q "$pkg" &>/dev/null && ! pacman -Q "$pkg" &>/dev/null; then
-        echo -e "${GREEN}Installing $pkg from AUR...${NC}"
-        if ! yay -S --noconfirm "$pkg" 2>/dev/null; then
-            echo -e "${RED}✗ Failed to install $pkg${NC}"
-            FAILED_AUR+=("$pkg")
-            return 1
-        fi
-    else
+    local max_retries=3
+    local retry_count=0
+    
+    if yay -Q "$pkg" &>/dev/null || pacman -Q "$pkg" &>/dev/null; then
         echo -e "${YELLOW}✓ $pkg already installed${NC}"
+        return 0
     fi
-    return 0
+    
+    while [[ $retry_count -lt $max_retries ]]; do
+        echo -e "${GREEN}Installing $pkg from AUR... (attempt $((retry_count + 1))/$max_retries)${NC}"
+        
+        if yay -S --noconfirm "$pkg" 2>/dev/null; then
+            echo -e "${GREEN}✅ $pkg installed successfully${NC}"
+            return 0
+        fi
+        
+        # Check if interrupted
+        if [[ $? -eq 130 ]] || [[ $CTRL_C_COUNT -gt 0 ]]; then
+            if [[ $CTRL_C_COUNT -ge 2 ]]; then
+                echo -e "${RED}✗ Exiting entire script due to double interrupt...${NC}"
+                kill -TERM -$$ 2>/dev/null || exit 130
+            fi
+            echo -e "${YELLOW}Retrying $pkg...${NC}"
+            CTRL_C_COUNT=0
+            retry_count=$((retry_count + 1))
+            continue
+        fi
+        
+        retry_count=$((retry_count + 1))
+        if [[ $retry_count -lt $max_retries ]]; then
+            echo -e "${YELLOW}Retry $retry_count/$max_retries for $pkg...${NC}"
+            sleep 1
+        fi
+    done
+    
+    echo -e "${RED}✗ Failed to install $pkg after $max_retries attempts${NC}"
+    FAILED_AUR+=("$pkg")
+    return 1
 }
 
 echo -e "${GREEN}=======================================${NC}"
@@ -149,6 +213,9 @@ ESSENTIAL_TOOLS=(
     
     # Development
     breeze syntax-highlighting
+    
+    # XDG user directories
+    xdg-user-dirs
 )
 
 for pkg in "${ESSENTIAL_TOOLS[@]}"; do
@@ -180,7 +247,6 @@ AUR_PKGS=(
     matugen-bin
     adw-gtk-theme-git
     breeze-plus
-    ttf-jetbrains-mono-nerd
     ttf-twemoji
     mpvpaper
 )
@@ -189,12 +255,34 @@ for pkg in "${AUR_PKGS[@]}"; do
     install_aur_if_missing "$pkg" || true
 done
 
+# Install JetBrains Mono Nerd Font
+echo -e "${GREEN}==> Installing JetBrains Mono Nerd Font...${NC}"
+
+JETBRAINS_FONT_DIR="$HOME/.local/share/fonts/JetBrainsMono"
+if [[ -d "$JETBRAINS_FONT_DIR" ]] && [[ $(ls -A "$JETBRAINS_FONT_DIR" 2>/dev/null | wc -l) -gt 0 ]]; then
+    echo -e "${YELLOW}✓ JetBrains Mono Nerd Font already installed${NC}"
+else
+    mkdir -p "$JETBRAINS_FONT_DIR"
+    cd "$JETBRAINS_FONT_DIR" || exit 1
+    
+    echo "Downloading JetBrains Mono Nerd Font..."
+    FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+    
+    if curl -sSfL "$FONT_URL" -o JetBrainsMono.zip; then
+        unzip -o JetBrainsMono.zip
+        rm JetBrainsMono.zip
+        echo -e "${GREEN}✅ JetBrains Mono Nerd Font installed${NC}"
+    else
+        echo -e "${RED}✗ Failed to download JetBrains Mono Nerd Font${NC}"
+        FAILED_PACKAGES+=("jetbrains-mono-nerd-font")
+    fi
+fi
+
 # Install Material Symbols fonts
 echo -e "${GREEN}==> Installing Material Symbols fonts...${NC}"
 
 FONT_DIR="$HOME/.local/share/fonts/material-symbols"
 
-# Check if fonts already exist
 if [[ -d "$FONT_DIR" ]] && [[ $(ls -A "$FONT_DIR" 2>/dev/null | wc -l) -gt 5 ]]; then
     echo -e "${YELLOW}✓ Material Symbols fonts already installed${NC}"
 else
@@ -226,9 +314,13 @@ else
       fi
     done
 
-    fc-cache -f "$HOME/.local/share/fonts"
-    echo -e "${GREEN}✅ Fonts installed${NC}"
+    echo -e "${GREEN}✅ Material Symbols fonts installed${NC}"
 fi
+
+# Rebuild font cache
+echo -e "${GREEN}==> Rebuilding font cache...${NC}"
+fc-cache -f "$HOME/.local/share/fonts"
+echo -e "${GREEN}✅ Font cache rebuilt${NC}"
 
 # Python virtual environment setup
 echo -e "${GREEN}==> Setting up Python environment...${NC}"
