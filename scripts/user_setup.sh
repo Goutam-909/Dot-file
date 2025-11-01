@@ -8,6 +8,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; NC='\033[0m'
 
+declare -a MODIFICATIONS=()
+
 echo -e "${GREEN}=======================================${NC}"
 echo -e "${GREEN}  Setting Up User Configurations${NC}"
 echo -e "${GREEN}=======================================${NC}"
@@ -15,15 +17,22 @@ echo
 
 # Backup existing configs
 if [[ -d "$HOME/.config/hypr" ]] || [[ -d "$HOME/.config/quickshell" ]]; then
-    echo -e "${YELLOW}Existing configs detected. Creating backup...${NC}"
-    BACKUP_DIR="$HOME/.config-backup-$(date +%Y%m%d-%H%M%S)"
-    mkdir -p "$BACKUP_DIR"
+    echo -e "${YELLOW}Existing configs detected.${NC}"
+    read -rp "Create backup of existing configurations? (y/N): " create_backup
     
-    [[ -d "$HOME/.config/hypr" ]] && cp -r "$HOME/.config/hypr" "$BACKUP_DIR/"
-    [[ -d "$HOME/.config/quickshell" ]] && cp -r "$HOME/.config/quickshell" "$BACKUP_DIR/"
-    [[ -d "$HOME/.config/rofi" ]] && cp -r "$HOME/.config/rofi" "$BACKUP_DIR/"
-    
-    echo -e "${GREEN}✅ Backup created at: $BACKUP_DIR${NC}"
+    if [[ "$create_backup" =~ ^[Yy]$ ]]; then
+        BACKUP_DIR="$HOME/.config-backup-$(date +%Y%m%d-%H%M%S)"
+        mkdir -p "$BACKUP_DIR"
+        
+        [[ -d "$HOME/.config/hypr" ]] && cp -r "$HOME/.config/hypr" "$BACKUP_DIR/"
+        [[ -d "$HOME/.config/quickshell" ]] && cp -r "$HOME/.config/quickshell" "$BACKUP_DIR/"
+        [[ -d "$HOME/.config/rofi" ]] && cp -r "$HOME/.config/rofi" "$BACKUP_DIR/"
+        
+        echo -e "${GREEN}✅ Backup created at: $BACKUP_DIR${NC}"
+        MODIFICATIONS+=("Backup created: $BACKUP_DIR")
+    else
+        echo -e "${YELLOW}Skipping backup...${NC}"
+    fi
 fi
 
 # Copy .config
@@ -32,6 +41,7 @@ if [[ -d "$SCRIPT_DIR/../config" ]]; then
     mkdir -p "$HOME/.config"
     cp -r "$SCRIPT_DIR/../config/"* "$HOME/.config/"
     echo -e "${GREEN}✅ Config files copied${NC}"
+    MODIFICATIONS+=("Copied dotfiles to ~/.config")
 else
     echo -e "${RED}⚠ config directory not found!${NC}"
 fi
@@ -42,6 +52,7 @@ if [[ -d "$SCRIPT_DIR/../local" ]]; then
     mkdir -p "$HOME/.local"
     cp -r "$SCRIPT_DIR/../local/"* "$HOME/.local/"
     echo -e "${GREEN}✅ Local files copied${NC}"
+    MODIFICATIONS+=("Copied files to ~/.local")
 else
     echo -e "${YELLOW}⚠ local directory not found, skipping...${NC}"
 fi
@@ -51,13 +62,16 @@ echo -e "${GREEN}==> Setting file permissions...${NC}"
 
 # Make scripts executable
 find "$HOME/.config" "$HOME/.local" -type f \( \
-    -name "*.sh" -o -name "*.py" \) -exec chmod +x {} \; 2>/dev/null
+    -name "*.sh" -o -name "*.py" \
+) -exec chmod +x {} \; 2>/dev/null
 
 # Make specific config files readable (not executable)
 find "$HOME/.config" "$HOME/.local" -type f \( \
-    -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.css" -o -name "*.conf" \) -exec chmod 644 {} \; 2>/dev/null
+    -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.css" -o -name "*.conf" \
+) -exec chmod 644 {} \; 2>/dev/null
 
 echo -e "${GREEN}✅ Permissions set${NC}"
+MODIFICATIONS+=("Set file permissions")
 
 # Set environment variables for Hyprland
 echo -e "${GREEN}==> Configuring environment...${NC}"
@@ -76,6 +90,7 @@ env = QT_QPA_PLATFORM,wayland
 env = QT_QPA_PLATFORMTHEME,kde
 env = XDG_MENU_PREFIX,plasma-
 EOF
+        MODIFICATIONS+=("Added Qt/Wayland environment variables")
     fi
 fi
 
@@ -84,6 +99,7 @@ echo -e "${GREEN}==> Creating XDG user directories...${NC}"
 if command -v xdg-user-dirs-update &>/dev/null; then
     xdg-user-dirs-update
     echo -e "${GREEN}✅ XDG user directories created/updated${NC}"
+    MODIFICATIONS+=("Created XDG user directories")
     
     # List created directories
     echo -e "${YELLOW}Standard directories:${NC}"
@@ -101,6 +117,7 @@ else
              "$HOME/Music" "$HOME/Pictures" "$HOME/Videos" \
              "$HOME/Templates" "$HOME/Public"
     echo -e "${GREEN}✅ Standard directories created${NC}"
+    MODIFICATIONS+=("Created standard user directories")
 fi
 
 # Verify Python venv
@@ -118,8 +135,46 @@ if [[ ! -d "$WALLPAPER_DIR" ]]; then
     mkdir -p "$WALLPAPER_DIR"
     echo -e "${GREEN}✅ Created $WALLPAPER_DIR${NC}"
     echo -e "${YELLOW}⚠ Add your wallpapers to this directory${NC}"
+    MODIFICATIONS+=("Created wallpaper directory")
 else
     echo -e "${GREEN}✓ Wallpaper directory exists${NC}"
+fi
+
+# SDDM Theme Setup
+echo
+read -rp "Would you like to install SDDM Hyprland theme? (y/N): " install_sddm_theme
+if [[ "$install_sddm_theme" =~ ^[Yy]$ ]]; then
+    echo -e "${GREEN}==> Installing SDDM Hyprland theme...${NC}"
+    
+    # Clone the theme
+    if [[ ! -d /tmp/sddm-hyprland ]]; then
+        git clone https://github.com/HyDE-Project/sddm-hyprland /tmp/sddm-hyprland
+    fi
+    
+    cd /tmp/sddm-hyprland
+    
+    # Install theme
+    if sudo make install 2>/dev/null; then
+        echo -e "${GREEN}✅ SDDM Hyprland theme installed${NC}"
+        MODIFICATIONS+=("Installed SDDM Hyprland theme")
+        
+        # Configure SDDM to use the theme
+        SDDM_CONF="/etc/sddm.conf.d/hyprland.conf"
+        sudo mkdir -p /etc/sddm.conf.d
+        
+        echo -e "${YELLOW}Configuring SDDM...${NC}"
+        sudo tee "$SDDM_CONF" > /dev/null << 'EOF'
+[Theme]
+Current=sddm-hyprland
+EOF
+        
+        echo -e "${GREEN}✅ SDDM configured to use Hyprland theme${NC}"
+        MODIFICATIONS+=("Configured SDDM theme")
+    else
+        echo -e "${RED}✗ Failed to install SDDM theme${NC}"
+    fi
+    
+    cd - > /dev/null
 fi
 
 # Enable required services
@@ -131,6 +186,7 @@ if systemctl is-enabled NetworkManager.service &>/dev/null; then
 else
     sudo systemctl enable NetworkManager.service
     echo -e "${GREEN}✅ NetworkManager enabled${NC}"
+    MODIFICATIONS+=("Enabled NetworkManager")
 fi
 
 # Create initial cache directories
@@ -161,6 +217,14 @@ echo -e "${GREEN}=======================================${NC}"
 echo
 echo "Configuration installed successfully!"
 echo
+
+# Print modifications summary
+if [[ ${#MODIFICATIONS[@]} -gt 0 ]]; then
+    echo -e "${BLUE}System modifications made:${NC}"
+    printf '  • %s\n' "${MODIFICATIONS[@]}"
+    echo
+fi
+
 echo "Next steps:"
 echo "1. Log out of your current session"
 echo "2. Select 'Hyprland' from SDDM login manager"
