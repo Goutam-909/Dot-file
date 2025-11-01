@@ -10,22 +10,7 @@ GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; NC='\033[0m'
 
 # Error tracking
 declare -a FAILED_REMOVALS=()
-CTRL_C_COUNT=0
-
-# Trap Ctrl+C
-trap 'handle_interrupt' INT
-
-handle_interrupt() {
-    CTRL_C_COUNT=$((CTRL_C_COUNT + 1))
-    if [[ $CTRL_C_COUNT -eq 1 ]]; then
-        echo -e "\n${YELLOW}⚠ Interrupt detected! Press Ctrl+C again within 2 seconds to exit completely.${NC}"
-        sleep 3
-        CTRL_C_COUNT=0
-    else
-        echo -e "\n${RED}✗ Double interrupt detected. Exiting entire script...${NC}"
-        kill -TERM -$$ 2>/dev/null || exit 130
-    fi
-}
+declare -a REMOVED_PACKAGES=()
 
 echo -e "${YELLOW}=======================================${NC}"
 echo -e "${YELLOW}  GNOME Cleanup${NC}"
@@ -35,7 +20,7 @@ echo "This will remove default GNOME applications"
 echo "while keeping essential libraries and dependencies."
 echo
 
-read -rp "Continue with cleanup? (y/n): " confirm
+read -rp "Continue with cleanup? (y/N): " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "Cleanup cancelled."
     exit 0
@@ -88,12 +73,13 @@ GNOME_APPS_TO_REMOVE=(
 for pkg in "${GNOME_APPS_TO_REMOVE[@]}"; do
     if pacman -Q "$pkg" &>/dev/null; then
         echo -e "${YELLOW}Removing $pkg...${NC}"
-        if ! sudo pacman -Rns --noconfirm "$pkg" 2>/dev/null && \
-           ! sudo pacman -Rn --noconfirm "$pkg" 2>/dev/null; then
+        if sudo pacman -Rns --noconfirm "$pkg" 2>/dev/null || \
+           sudo pacman -Rn --noconfirm "$pkg" 2>/dev/null; then
+            echo -e "${GREEN}✓ Removed $pkg${NC}"
+            REMOVED_PACKAGES+=("$pkg")
+        else
             echo -e "${RED}✗ Failed to remove $pkg (might be dependency)${NC}"
             FAILED_REMOVALS+=("$pkg")
-        else
-            echo -e "${GREEN}✓ Removed $pkg${NC}"
         fi
     else
         echo -e "${GREEN}✓ $pkg not installed${NC}"
@@ -114,7 +100,7 @@ else
 fi
 
 # Clear package cache (optional)
-read -rp "Clear package cache to save space? (y/n): " clear_cache
+read -rp "Clear package cache to save space? (y/N): " clear_cache
 if [[ "$clear_cache" =~ ^[Yy]$ ]]; then
     if sudo pacman -Sc --noconfirm; then
         echo -e "${GREEN}✅ Package cache cleared${NC}"
@@ -125,11 +111,16 @@ fi
 
 # Summary
 echo
+if [[ ${#REMOVED_PACKAGES[@]} -gt 0 ]]; then
+    echo -e "${GREEN}Removed packages (${#REMOVED_PACKAGES[@]}):${NC}"
+    printf '  ✓ %s\n' "${REMOVED_PACKAGES[@]}"
+fi
+
 if [[ ${#FAILED_REMOVALS[@]} -eq 0 ]]; then
     echo -e "${GREEN}✅ GNOME cleanup complete!${NC}"
 else
     echo -e "${YELLOW}⚠ Some packages failed to remove:${NC}"
-    printf '  - %s\n' "${FAILED_REMOVALS[@]}"
+    printf '  ✗ %s\n' "${FAILED_REMOVALS[@]}"
     echo
 fi
 
