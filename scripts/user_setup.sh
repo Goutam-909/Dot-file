@@ -51,18 +51,11 @@ echo -e "${GREEN}==> Setting file permissions...${NC}"
 
 # Make scripts executable
 find "$HOME/.config" "$HOME/.local" -type f \( \
-    -name "*.sh" -o \
-    -name "*.py" \
-) -exec chmod +x {} \; 2>/dev/null
+    -name "*.sh" -o -name "*.py" \) -exec chmod +x {} \; 2>/dev/null
 
 # Make specific config files readable (not executable)
 find "$HOME/.config" "$HOME/.local" -type f \( \
-    -name "*.json" -o \
-    -name "*.toml" -o \
-    -name "*.txt" -o \
-    -name "*.css" -o \
-    -name "*.conf" \
-) -exec chmod 644 {} \; 2>/dev/null
+    -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.css" -o -name "*.conf" \) -exec chmod 644 {} \; 2>/dev/null
 
 echo -e "${GREEN}✅ Permissions set${NC}"
 
@@ -86,6 +79,30 @@ EOF
     fi
 fi
 
+# Update XDG user directories
+echo -e "${GREEN}==> Creating XDG user directories...${NC}"
+if command -v xdg-user-dirs-update &>/dev/null; then
+    xdg-user-dirs-update
+    echo -e "${GREEN}✅ XDG user directories created/updated${NC}"
+    
+    # List created directories
+    echo -e "${YELLOW}Standard directories:${NC}"
+    xdg-user-dir DESKTOP 2>/dev/null && echo "  ✓ Desktop: $(xdg-user-dir DESKTOP)"
+    xdg-user-dir DOWNLOAD 2>/dev/null && echo "  ✓ Downloads: $(xdg-user-dir DOWNLOAD)"
+    xdg-user-dir TEMPLATES 2>/dev/null && echo "  ✓ Templates: $(xdg-user-dir TEMPLATES)"
+    xdg-user-dir PUBLICSHARE 2>/dev/null && echo "  ✓ Public: $(xdg-user-dir PUBLICSHARE)"
+    xdg-user-dir DOCUMENTS 2>/dev/null && echo "  ✓ Documents: $(xdg-user-dir DOCUMENTS)"
+    xdg-user-dir MUSIC 2>/dev/null && echo "  ✓ Music: $(xdg-user-dir MUSIC)"
+    xdg-user-dir PICTURES 2>/dev/null && echo "  ✓ Pictures: $(xdg-user-dir PICTURES)"
+    xdg-user-dir VIDEOS 2>/dev/null && echo "  ✓ Videos: $(xdg-user-dir VIDEOS)"
+else
+    echo -e "${YELLOW}⚠ xdg-user-dirs not installed, creating manually...${NC}"
+    mkdir -p "$HOME/Desktop" "$HOME/Downloads" "$HOME/Documents" \
+             "$HOME/Music" "$HOME/Pictures" "$HOME/Videos" \
+             "$HOME/Templates" "$HOME/Public"
+    echo -e "${GREEN}✅ Standard directories created${NC}"
+fi
+
 # Verify Python venv
 VENV_PATH="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/.venv"
 if [[ -d "$VENV_PATH" ]]; then
@@ -101,6 +118,8 @@ if [[ ! -d "$WALLPAPER_DIR" ]]; then
     mkdir -p "$WALLPAPER_DIR"
     echo -e "${GREEN}✅ Created $WALLPAPER_DIR${NC}"
     echo -e "${YELLOW}⚠ Add your wallpapers to this directory${NC}"
+else
+    echo -e "${GREEN}✓ Wallpaper directory exists${NC}"
 fi
 
 # Enable required services
@@ -115,10 +134,25 @@ else
 fi
 
 # Create initial cache directories
+echo -e "${GREEN}==> Creating cache directories...${NC}"
 mkdir -p "$HOME/.cache/quickshell"
 mkdir -p "$HOME/.cache/matugen"
 mkdir -p "$HOME/.cache/hypr"
-xdg-user-dirs-update
+echo -e "${GREEN}✅ Cache directories created${NC}"
+
+# Verify fonts installation
+echo -e "${GREEN}==> Verifying fonts installation...${NC}"
+if fc-list | grep -q "JetBrainsMono"; then
+    echo -e "${GREEN}✓ JetBrains Mono Nerd Font detected${NC}"
+else
+    echo -e "${YELLOW}⚠ JetBrains Mono Nerd Font not found${NC}"
+fi
+
+if fc-list | grep -q "Material"; then
+    echo -e "${GREEN}✓ Material Symbols fonts detected${NC}"
+else
+    echo -e "${YELLOW}⚠ Material Symbols fonts not found${NC}"
+fi
 
 echo
 echo -e "${GREEN}=======================================${NC}"
@@ -129,12 +163,21 @@ echo "Configuration installed successfully!"
 echo
 echo "Next steps:"
 echo "1. Log out of your current session"
-echo "2. Select 'Hyprland' from your login manager"
+echo "2. Select 'Hyprland' from SDDM login manager"
 echo "3. Use MOD+Q to open QuickShell launcher"
 echo
 echo "Key bindings:"
 echo "  MOD = Super (Windows key)"
 echo "  MOD+Q = Application launcher"
-echo "  MOD+Return = Terminal"
-echo "  MOD+E = File manager"
+echo "  MOD+Return = Kitty terminal"
+echo "  MOD+E = Dolphin file manager"
+echo
+echo "Directories created:"
+echo "  📁 ~/Desktop"
+echo "  📁 ~/Downloads"
+echo "  📁 ~/Documents"
+echo "  📁 ~/Music"
+echo "  📁 ~/Pictures"
+echo "  📁 ~/Videos"
+echo "  📁 ~/Pictures/wallpapers (add your wallpapers here)"
 echo
