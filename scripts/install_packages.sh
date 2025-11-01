@@ -11,115 +11,43 @@ GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; BLUE='\033[1;34m'; NC
 # Error tracking
 declare -a FAILED_PACKAGES=()
 declare -a FAILED_AUR=()
-CTRL_C_COUNT=0
-CTRL_C_TIME=0
-
-# Trap Ctrl+C
-trap 'handle_interrupt' INT
-
-handle_interrupt() {
-    local current_time=$(date +%s)
-    
-    # Reset counter if more than 2 seconds passed
-    if [[ $((current_time - CTRL_C_TIME)) -gt 2 ]]; then
-        CTRL_C_COUNT=0
-    fi
-    
-    CTRL_C_COUNT=$((CTRL_C_COUNT + 1))
-    CTRL_C_TIME=$current_time
-    
-    if [[ $CTRL_C_COUNT -eq 1 ]]; then
-        echo -e "\n${YELLOW}⚠ Interrupt detected! Press Ctrl+C again within 2 seconds to exit completely.${NC}"
-        return 1  # Return to retry the command
-    else
-        echo -e "\n${RED}✗ Double interrupt detected. Exiting entire script...${NC}"
-        # Kill the entire script process tree
-        kill -TERM -$$ 2>/dev/null || exit 130
-    fi
-}
+declare -a INSTALLED_PACMAN=()
+declare -a INSTALLED_AUR=()
 
 install_if_missing() {
     local pkg="$1"
-    local max_retries=3
-    local retry_count=0
-    
-    if pacman -Q "$pkg" &>/dev/null; then
-        echo -e "${YELLOW}✓ $pkg already installed${NC}"
-        return 0
-    fi
-    
-    while [[ $retry_count -lt $max_retries ]]; do
-        echo -e "${GREEN}Installing $pkg... (attempt $((retry_count + 1))/$max_retries)${NC}"
-        
+    if ! pacman -Q "$pkg" &>/dev/null; then
+        echo -e "${GREEN}Installing $pkg...${NC}"
         if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
-            echo -e "${GREEN}✅ $pkg installed successfully${NC}"
-            return 0
+            INSTALLED_PACMAN+=("$pkg")
+            echo -e "${GREEN}✅ $pkg installed${NC}"
+        else
+            echo -e "${RED}✗ Failed to install $pkg${NC}"
+            FAILED_PACKAGES+=("$pkg")
+            return 1
         fi
-        
-        # Check if interrupted
-        if [[ $? -eq 130 ]] || [[ $CTRL_C_COUNT -gt 0 ]]; then
-            if [[ $CTRL_C_COUNT -ge 2 ]]; then
-                echo -e "${RED}✗ Exiting entire script due to double interrupt...${NC}"
-                kill -TERM -$$ 2>/dev/null || exit 130
-            fi
-            echo -e "${YELLOW}Retrying $pkg...${NC}"
-            CTRL_C_COUNT=0
-            retry_count=$((retry_count + 1))
-            continue
-        fi
-        
-        retry_count=$((retry_count + 1))
-        if [[ $retry_count -lt $max_retries ]]; then
-            echo -e "${YELLOW}Retry $retry_count/$max_retries for $pkg...${NC}"
-            sleep 1
-        fi
-    done
-    
-    echo -e "${RED}✗ Failed to install $pkg after $max_retries attempts${NC}"
-    FAILED_PACKAGES+=("$pkg")
-    return 1
+    else
+        echo -e "${YELLOW}✓ $pkg already installed${NC}"
+    fi
+    return 0
 }
 
 install_aur_if_missing() {
     local pkg="$1"
-    local max_retries=3
-    local retry_count=0
-    
-    if yay -Q "$pkg" &>/dev/null || pacman -Q "$pkg" &>/dev/null; then
-        echo -e "${YELLOW}✓ $pkg already installed${NC}"
-        return 0
-    fi
-    
-    while [[ $retry_count -lt $max_retries ]]; do
-        echo -e "${GREEN}Installing $pkg from AUR... (attempt $((retry_count + 1))/$max_retries)${NC}"
-        
+    if ! yay -Q "$pkg" &>/dev/null && ! pacman -Q "$pkg" &>/dev/null; then
+        echo -e "${GREEN}Installing $pkg from AUR...${NC}"
         if yay -S --noconfirm "$pkg" 2>/dev/null; then
-            echo -e "${GREEN}✅ $pkg installed successfully${NC}"
-            return 0
+            INSTALLED_AUR+=("$pkg")
+            echo -e "${GREEN}✅ $pkg installed${NC}"
+        else
+            echo -e "${RED}✗ Failed to install $pkg${NC}"
+            FAILED_AUR+=("$pkg")
+            return 1
         fi
-        
-        # Check if interrupted
-        if [[ $? -eq 130 ]] || [[ $CTRL_C_COUNT -gt 0 ]]; then
-            if [[ $CTRL_C_COUNT -ge 2 ]]; then
-                echo -e "${RED}✗ Exiting entire script due to double interrupt...${NC}"
-                kill -TERM -$$ 2>/dev/null || exit 130
-            fi
-            echo -e "${YELLOW}Retrying $pkg...${NC}"
-            CTRL_C_COUNT=0
-            retry_count=$((retry_count + 1))
-            continue
-        fi
-        
-        retry_count=$((retry_count + 1))
-        if [[ $retry_count -lt $max_retries ]]; then
-            echo -e "${YELLOW}Retry $retry_count/$max_retries for $pkg...${NC}"
-            sleep 1
-        fi
-    done
-    
-    echo -e "${RED}✗ Failed to install $pkg after $max_retries attempts${NC}"
-    FAILED_AUR+=("$pkg")
-    return 1
+    else
+        echo -e "${YELLOW}✓ $pkg already installed${NC}"
+    fi
+    return 0
 }
 
 echo -e "${GREEN}=======================================${NC}"
@@ -190,7 +118,7 @@ ESSENTIAL_TOOLS=(
     # File managers
     dolphin
     kdegraphics-thumbnailers  # PDF thumbnails
-    ffmpegthumbs              # Video thumbnails
+    ffmpegthumbs              # Video thumbnails (correct package name)
     
     # Utilities
     rofi-wayland kdialog ark
@@ -224,7 +152,7 @@ done
 
 # Flatpak support
 echo
-read -rp "Install Flatpak and Flathub support? (y/n): " install_flatpak
+read -rp "Install Flatpak and Flathub support? (y/N): " install_flatpak
 if [[ "$install_flatpak" =~ ^[Yy]$ ]]; then
     echo -e "${GREEN}==> Installing Flatpak...${NC}"
     install_if_missing "flatpak"
@@ -272,6 +200,7 @@ else
         unzip -o JetBrainsMono.zip
         rm JetBrainsMono.zip
         echo -e "${GREEN}✅ JetBrains Mono Nerd Font installed${NC}"
+        INSTALLED_PACMAN+=("jetbrains-mono-nerd-font")
     else
         echo -e "${RED}✗ Failed to download JetBrains Mono Nerd Font${NC}"
         FAILED_PACKAGES+=("jetbrains-mono-nerd-font")
@@ -315,6 +244,7 @@ else
     done
 
     echo -e "${GREEN}✅ Material Symbols fonts installed${NC}"
+    INSTALLED_PACMAN+=("material-symbols-fonts")
 fi
 
 # Rebuild font cache
@@ -360,6 +290,7 @@ if pipx list | grep -q "kde-material-you-colors"; then
 else
     if pipx install kde-material-you-colors 2>/dev/null; then
         echo -e "${GREEN}✅ kde-material-you-colors installed${NC}"
+        INSTALLED_PACMAN+=("kde-material-you-colors")
     else
         echo -e "${RED}✗ kde-material-you-colors failed to install${NC}"
         FAILED_PACKAGES+=("kde-material-you-colors")
@@ -372,6 +303,16 @@ echo -e "${BLUE}=======================================${NC}"
 echo -e "${BLUE}  Installation Summary${NC}"
 echo -e "${BLUE}=======================================${NC}"
 
+if [[ ${#INSTALLED_PACMAN[@]} -gt 0 ]]; then
+    echo -e "${GREEN}Installed from official repos (${#INSTALLED_PACMAN[@]}):${NC}"
+    printf '  ✓ %s\n' "${INSTALLED_PACMAN[@]}"
+fi
+
+if [[ ${#INSTALLED_AUR[@]} -gt 0 ]]; then
+    echo -e "${GREEN}Installed from AUR (${#INSTALLED_AUR[@]}):${NC}"
+    printf '  ✓ %s\n' "${INSTALLED_AUR[@]}"
+fi
+
 if [[ ${#FAILED_PACKAGES[@]} -eq 0 ]] && [[ ${#FAILED_AUR[@]} -eq 0 ]]; then
     echo -e "${GREEN}✅ All packages installed successfully!${NC}"
 else
@@ -379,16 +320,13 @@ else
     
     if [[ ${#FAILED_PACKAGES[@]} -gt 0 ]]; then
         echo -e "${RED}Failed official packages:${NC}"
-        printf '  - %s\n' "${FAILED_PACKAGES[@]}"
+        printf '  ✗ %s\n' "${FAILED_PACKAGES[@]}"
     fi
     
     if [[ ${#FAILED_AUR[@]} -gt 0 ]]; then
         echo -e "${RED}Failed AUR packages:${NC}"
-        printf '  - %s\n' "${FAILED_AUR[@]}"
+        printf '  ✗ %s\n' "${FAILED_AUR[@]}"
     fi
-    
-    echo
-    echo -e "${YELLOW}You can try installing failed packages manually later.${NC}"
 fi
 
 echo -e "${GREEN}✅ Core packages installation complete!${NC}"
