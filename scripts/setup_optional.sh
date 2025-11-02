@@ -50,7 +50,7 @@ fi
 read -rp "Install OpenTabletDriver? (y/N): " install_otd
 if [[ "$install_otd" =~ ^[Yy]$ ]]; then
     if ! pacman -Q opentabletdriver &>/dev/null && ! yay -Q opentabletdriver &>/dev/null; then
-        yay -S opentabletdriver
+        yay -S --noconfirm opentabletdriver
         systemctl --user enable opentabletdriver.service --now
     fi
 fi
