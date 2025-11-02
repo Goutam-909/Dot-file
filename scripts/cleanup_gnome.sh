@@ -1,139 +1,49 @@
 #!/usr/bin/env bash
 # ===============================================
-#  GNOME Cleanup Script
-#  Removes default GNOME apps (keeps dependencies)
+#  GNOME Cleanup
 # ===============================================
 
 set -e
 
 GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; NC='\033[0m'
 
-# Error tracking
-declare -a FAILED_REMOVALS=()
-declare -a REMOVED_PACKAGES=()
-
-# Cleanup function for interrupts
-cleanup_pacman_lock() {
-    if [[ -f /var/lib/pacman/db.lck ]]; then
-        echo -e "\n${YELLOW}Cleaning up pacman lock...${NC}"
-        sudo rm -f /var/lib/pacman/db.lck
-        echo -e "${GREEN}✅ Lock file removed${NC}"
-    fi
-}
-
-# Trap interrupts
-trap 'cleanup_pacman_lock; exit 130' INT TERM
+# Cleanup lock on interrupt
+trap 'sudo rm -f /var/lib/pacman/db.lck 2>/dev/null; exit 130' INT TERM
 
 echo -e "${YELLOW}=======================================${NC}"
 echo -e "${YELLOW}  GNOME Cleanup${NC}"
 echo -e "${YELLOW}=======================================${NC}"
 echo
-echo "This will remove default GNOME applications"
-echo "while keeping essential libraries and dependencies."
-echo
 
-read -rp "Continue with cleanup? (y/N): " confirm
+read -rp "Remove GNOME default apps? (y/N): " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "Cleanup cancelled."
     exit 0
 fi
 
-echo -e "${GREEN}==> Removing GNOME default applications...${NC}"
-
-# List of GNOME apps to remove (not their dependencies)
-GNOME_APPS_TO_REMOVE=(
-    # GNOME Core Apps (bloat)
-    gnome-contacts
-    gnome-weather
-    gnome-maps
-    gnome-music
-    gnome-photos
-    totem
-    gnome-characters
-    gnome-connections
-    
-    # System utilities (we have alternatives)
-    baobab
-    gnome-system-monitor
-    gnome-logs
-    gnome-disk-utility
-    
-    # Help and tour
-    gnome-tour
-    yelp
-    gnome-user-docs
-    
-    # Web and office
-    simple-scan
-    epiphany
-    
-    # Calendar and software
-    gnome-calendar
-    gnome-software
-    
-    # Text editor (using alternatives)
-    gnome-text-editor
-    
-    # Parental controls
-    malcontent
-    
-    # System monitor replacement
-    htop
+GNOME_APPS=(
+    gnome-contacts gnome-weather gnome-maps gnome-music gnome-photos
+    totem gnome-characters gnome-connections baobab gnome-system-monitor
+    gnome-logs gnome-disk-utility gnome-tour yelp gnome-user-docs
+    simple-scan epiphany gnome-calendar gnome-software gnome-text-editor
+    malcontent htop
 )
 
-# Remove packages
-for pkg in "${GNOME_APPS_TO_REMOVE[@]}"; do
+for pkg in "${GNOME_APPS[@]}"; do
     if pacman -Q "$pkg" &>/dev/null; then
-        echo -e "${YELLOW}Removing $pkg...${NC}"
-        if sudo pacman -Rns "$pkg" 2>/dev/null || \
-           sudo pacman -Rn "$pkg" 2>/dev/null; then
-            echo -e "${GREEN}✓ Removed $pkg${NC}"
-            REMOVED_PACKAGES+=("$pkg")
-        else
-            echo -e "${RED}✗ Failed to remove $pkg (might be dependency)${NC}"
-            FAILED_REMOVALS+=("$pkg")
-        fi
-    else
-        echo -e "${GREEN}✓ $pkg not installed${NC}"
+        sudo pacman -Rns "$pkg" 2>/dev/null || sudo pacman -Rn "$pkg" 2>/dev/null || true
     fi
 done
 
-# Clean orphaned packages
-echo -e "${GREEN}==> Cleaning orphaned packages...${NC}"
+# Clean orphans
 orphans=$(pacman -Qdtq 2>/dev/null || true)
 if [[ -n "$orphans" ]]; then
-    if echo "$orphans" | sudo pacman -Rns -; then
-        echo -e "${GREEN}✅ Orphaned packages removed${NC}"
-    else
-        echo -e "${YELLOW}⚠ Some orphaned packages couldn't be removed${NC}"
-    fi
-else
-    echo -e "${GREEN}✓ No orphaned packages found${NC}"
+    echo "$orphans" | sudo pacman -Rns - 2>/dev/null || true
 fi
 
-# Clear package cache (optional)
-read -rp "Clear package cache to save space? (y/N): " clear_cache
+# Clear cache
+read -rp "Clear package cache? (y/N): " clear_cache
 if [[ "$clear_cache" =~ ^[Yy]$ ]]; then
-    if sudo pacman -Sc; then
-        echo -e "${GREEN}✅ Package cache cleared${NC}"
-    else
-        echo -e "${RED}✗ Failed to clear package cache${NC}"
-    fi
+    sudo pacman -Sc
 fi
 
-# Summary
-echo
-if [[ ${#REMOVED_PACKAGES[@]} -gt 0 ]]; then
-    echo -e "${GREEN}Removed packages (${#REMOVED_PACKAGES[@]}):${NC}"
-    printf '  ✓ %s\n' "${REMOVED_PACKAGES[@]}"
-fi
-
-if [[ ${#FAILED_REMOVALS[@]} -eq 0 ]]; then
-    echo -e "${GREEN}✅ GNOME cleanup complete!${NC}"
-else
-    echo -e "${YELLOW}⚠ Some packages failed to remove:${NC}"
-    printf '  ✗ %s\n' "${FAILED_REMOVALS[@]}"
-    echo
-fi
-
-echo -e "${YELLOW}Essential GNOME libraries retained for GTK app compatibility${NC}"
+echo -e "${GREEN}✅ Cleanup complete!${NC}"
