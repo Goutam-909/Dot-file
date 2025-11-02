@@ -131,6 +131,8 @@ ESSENTIAL_TOOLS=(
     dolphin
     kdegraphics-thumbnailers  # PDF thumbnails
     ffmpegthumbs              # Video thumbnails (correct package name)
+    ffmpegthumbnailer
+
     
     # Utilities
     rofi-wayland kdialog ark
