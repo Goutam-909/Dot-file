@@ -41,6 +41,10 @@ if [[ -d "$SCRIPT_DIR/../local" ]]; then
     mkdir -p "$HOME/.local"
     cp -r "$SCRIPT_DIR/../local/"* "$HOME/.local/"
 fi
+if [[ -d "$SCRIPT_DIR/../.bashrc" ]]; then
+    echo -e "${GREEN}==> Copying Bash Config...${NC}"
+    cp -r "$SCRIPT_DIR/../.bashrc" "$HOME/"
+fi
 
 # Permissions
 echo -e "${GREEN}==> Setting permissions...${NC}"
