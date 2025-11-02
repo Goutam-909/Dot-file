@@ -8,11 +8,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; BLUE='\033[1;34m'; NC='\033[0m'
 
+# Log file
+LOG_FILE="$HOME/dotfiles-install-$(date +%Y%m%d-%H%M%S).log"
+
 # Error tracking
 declare -a FAILED_PACKAGES=()
 declare -a FAILED_AUR=()
-declare -a INSTALLED_PACMAN=()
-declare -a INSTALLED_AUR=()
 
 # Cleanup function for interrupts
 cleanup_pacman_lock() {
@@ -26,16 +27,23 @@ cleanup_pacman_lock() {
 # Trap interrupts
 trap 'cleanup_pacman_lock; exit 130' INT TERM
 
-install_if_missing() {
+log_package() {
+    local pkg="$1"
+    local source="$2"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installed: $pkg (from $source)" >> "$LOG_FILE"
+}
+
+install_package() {
     local pkg="$1"
     if ! pacman -Q "$pkg" &>/dev/null; then
         echo -e "${GREEN}Installing $pkg...${NC}"
-        if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
-            INSTALLED_PACMAN+=("$pkg")
+        if sudo pacman -S --needed --noconfirm "$pkg"; then
+            log_package "$pkg" "pacman"
             echo -e "${GREEN}✅ $pkg installed${NC}"
         else
             echo -e "${RED}✗ Failed to install $pkg${NC}"
             FAILED_PACKAGES+=("$pkg")
+            cleanup_pacman_lock
             return 1
         fi
     else
@@ -44,16 +52,17 @@ install_if_missing() {
     return 0
 }
 
-install_aur_if_missing() {
+install_aur_package() {
     local pkg="$1"
     if ! yay -Q "$pkg" &>/dev/null && ! pacman -Q "$pkg" &>/dev/null; then
         echo -e "${GREEN}Installing $pkg from AUR...${NC}"
-        if yay -S --noconfirm "$pkg" 2>/dev/null; then
-            INSTALLED_AUR+=("$pkg")
+        if yay -S --noconfirm "$pkg"; then
+            log_package "$pkg" "AUR"
             echo -e "${GREEN}✅ $pkg installed${NC}"
         else
             echo -e "${RED}✗ Failed to install $pkg${NC}"
             FAILED_AUR+=("$pkg")
+            cleanup_pacman_lock
             return 1
         fi
     else
@@ -65,15 +74,17 @@ install_aur_if_missing() {
 echo -e "${GREEN}=======================================${NC}"
 echo -e "${GREEN}  Installing Core Packages${NC}"
 echo -e "${GREEN}=======================================${NC}"
+echo -e "${BLUE}Log file: $LOG_FILE${NC}"
 echo
 
 # Check for yay
 if ! command -v yay &>/dev/null; then
     echo -e "${YELLOW}==> Installing yay AUR helper...${NC}"
-    sudo pacman -S --needed git base-devel --noconfirm
+    sudo pacman -S --needed --noconfirm git base-devel
     git clone https://aur.archlinux.org/yay.git /tmp/yay
     cd /tmp/yay && makepkg -si --noconfirm
     cd - >/dev/null
+    log_package "yay" "AUR"
     echo -e "${GREEN}✅ yay installed${NC}"
 fi
 
@@ -101,24 +112,25 @@ HYPRLAND_CORE=(
 )
 
 for pkg in "${HYPRLAND_CORE[@]}"; do
-    install_if_missing "$pkg" || true
+    install_package "$pkg" || true
 done
 
 # Display Manager - SDDM
 echo -e "${GREEN}==> Installing SDDM display manager...${NC}"
-install_if_missing "sddm"
+install_package "sddm"
 
 if systemctl is-enabled sddm.service &>/dev/null; then
     echo -e "${GREEN}✓ SDDM already enabled${NC}"
 else
     echo -e "${GREEN}Enabling SDDM...${NC}"
     sudo systemctl enable sddm.service
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Enabled: SDDM service" >> "$LOG_FILE"
     echo -e "${GREEN}✅ SDDM enabled${NC}"
 fi
 
 # Terminal
 echo -e "${GREEN}==> Installing terminal (Kitty)...${NC}"
-install_if_missing "kitty"
+install_package "kitty"
 
 # Essential tools for the config
 echo -e "${GREEN}==> Installing essential tools...${NC}"
@@ -129,10 +141,8 @@ ESSENTIAL_TOOLS=(
     
     # File managers
     dolphin
-    kdegraphics-thumbnailers  # PDF thumbnails
-    ffmpegthumbs              # Video thumbnails (correct package name)
-    ffmpegthumbnailer
-
+    kdegraphics-thumbnailers
+    ffmpegthumbs
     
     # Utilities
     rofi-wayland kdialog ark
@@ -158,25 +168,22 @@ ESSENTIAL_TOOLS=(
     
     # XDG user directories
     xdg-user-dirs
+    
+    # Flatpak
+    flatpak
 )
 
 for pkg in "${ESSENTIAL_TOOLS[@]}"; do
-    install_if_missing "$pkg" || true
+    install_package "$pkg" || true
 done
 
-# Flatpak support
-echo
-read -rp "Install Flatpak and Flathub support? (y/N): " install_flatpak
-if [[ "$install_flatpak" =~ ^[Yy]$ ]]; then
-    echo -e "${GREEN}==> Installing Flatpak...${NC}"
-    install_if_missing "flatpak"
-    
-    echo -e "${GREEN}Adding Flathub repository...${NC}"
-    if flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null; then
-        echo -e "${GREEN}✅ Flathub added${NC}"
-    else
-        echo -e "${YELLOW}✓ Flathub already configured${NC}"
-    fi
+# Flathub
+echo -e "${GREEN}==> Adding Flathub repository...${NC}"
+if flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Added: Flathub repository" >> "$LOG_FILE"
+    echo -e "${GREEN}✅ Flathub added${NC}"
+else
+    echo -e "${YELLOW}✓ Flathub already configured${NC}"
 fi
 
 # AUR packages
@@ -194,7 +201,7 @@ AUR_PKGS=(
 )
 
 for pkg in "${AUR_PKGS[@]}"; do
-    install_aur_if_missing "$pkg" || true
+    install_aur_package "$pkg" || true
 done
 
 # Install JetBrains Mono Nerd Font
@@ -211,10 +218,10 @@ else
     FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
     
     if curl -sSfL "$FONT_URL" -o JetBrainsMono.zip; then
-        unzip -o JetBrainsMono.zip
+        unzip -oq JetBrainsMono.zip
         rm JetBrainsMono.zip
+        log_package "jetbrains-mono-nerd-font" "GitHub"
         echo -e "${GREEN}✅ JetBrains Mono Nerd Font installed${NC}"
-        INSTALLED_PACMAN+=("jetbrains-mono-nerd-font")
     else
         echo -e "${RED}✗ Failed to download JetBrains Mono Nerd Font${NC}"
         FAILED_PACKAGES+=("jetbrains-mono-nerd-font")
@@ -251,14 +258,11 @@ else
       encoded_path="${path//[/%5B}"
       encoded_path="${encoded_path//]/%5D}"
       filename="${path##*/}"
-      echo "→ $filename"
-      if ! curl -sSfL "$BASE_URL/$encoded_path" -o "$filename" 2>/dev/null; then
-          echo -e "${RED}✗ Failed: $filename${NC}"
-      fi
+      curl -sSfL "$BASE_URL/$encoded_path" -o "$filename" 2>/dev/null || true
     done
 
+    log_package "material-symbols-fonts" "GitHub"
     echo -e "${GREEN}✅ Material Symbols fonts installed${NC}"
-    INSTALLED_PACMAN+=("material-symbols-fonts")
 fi
 
 # Rebuild font cache
@@ -276,6 +280,7 @@ mkdir -p "$(dirname "$VENV_PATH")"
 
 if [[ ! -d "$VENV_PATH" ]]; then
     python3 -m venv "$VENV_PATH"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Created: Python venv at $VENV_PATH" >> "$LOG_FILE"
     echo -e "${GREEN}✅ Virtual environment created${NC}"
 else
     echo -e "${YELLOW}✓ Virtual environment exists${NC}"
@@ -285,7 +290,8 @@ source "$VENV_PATH/bin/activate"
 
 if [[ -f "$REQ_FILE" ]]; then
     pip install --upgrade pip
-    if pip install -r "$REQ_FILE" 2>/dev/null; then
+    if pip install -r "$REQ_FILE"; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Installed: Python packages from requirements.txt" >> "$LOG_FILE"
         echo -e "${GREEN}✅ Python packages installed${NC}"
     else
         echo -e "${RED}✗ Some Python packages failed to install${NC}"
@@ -302,9 +308,9 @@ echo -e "${GREEN}==> Installing kde-material-you-colors...${NC}"
 if pipx list | grep -q "kde-material-you-colors"; then
     echo -e "${YELLOW}✓ kde-material-you-colors already installed${NC}"
 else
-    if pipx install kde-material-you-colors 2>/dev/null; then
+    if pipx install kde-material-you-colors; then
+        log_package "kde-material-you-colors" "pipx"
         echo -e "${GREEN}✅ kde-material-you-colors installed${NC}"
-        INSTALLED_PACMAN+=("kde-material-you-colors")
     else
         echo -e "${RED}✗ kde-material-you-colors failed to install${NC}"
         FAILED_PACKAGES+=("kde-material-you-colors")
@@ -317,21 +323,9 @@ echo -e "${BLUE}=======================================${NC}"
 echo -e "${BLUE}  Installation Summary${NC}"
 echo -e "${BLUE}=======================================${NC}"
 
-if [[ ${#INSTALLED_PACMAN[@]} -gt 0 ]]; then
-    echo -e "${GREEN}Installed from official repos (${#INSTALLED_PACMAN[@]}):${NC}"
-    printf '  ✓ %s\n' "${INSTALLED_PACMAN[@]}"
-fi
-
-if [[ ${#INSTALLED_AUR[@]} -gt 0 ]]; then
-    echo -e "${GREEN}Installed from AUR (${#INSTALLED_AUR[@]}):${NC}"
-    printf '  ✓ %s\n' "${INSTALLED_AUR[@]}"
-fi
-
 if [[ ${#FAILED_PACKAGES[@]} -eq 0 ]] && [[ ${#FAILED_AUR[@]} -eq 0 ]]; then
     echo -e "${GREEN}✅ All packages installed successfully!${NC}"
 else
-    echo -e "${YELLOW}⚠ Some packages failed to install:${NC}"
-    
     if [[ ${#FAILED_PACKAGES[@]} -gt 0 ]]; then
         echo -e "${RED}Failed official packages:${NC}"
         printf '  ✗ %s\n' "${FAILED_PACKAGES[@]}"
@@ -343,4 +337,5 @@ else
     fi
 fi
 
+echo -e "${BLUE}Installation log: $LOG_FILE${NC}"
 echo -e "${GREEN}✅ Core packages installation complete!${NC}"
