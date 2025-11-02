@@ -13,6 +13,18 @@ GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; NC='\033[0m'
 declare -a FAILED_PACKAGES=()
 declare -a INSTALLED_PACMAN=()
 
+# Cleanup function for interrupts
+cleanup_pacman_lock() {
+    if [[ -f /var/lib/pacman/db.lck ]]; then
+        echo -e "\n${YELLOW}Cleaning up pacman lock...${NC}"
+        sudo rm -f /var/lib/pacman/db.lck
+        echo -e "${GREEN}✅ Lock file removed${NC}"
+    fi
+}
+
+# Trap interrupts
+trap 'cleanup_pacman_lock; exit 130' INT TERM
+
 install_if_missing() {
     local pkg="$1"
     if ! pacman -Q "$pkg" &>/dev/null; then
