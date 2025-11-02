@@ -100,7 +100,7 @@ AUR_PKGS=(
 
 for pkg in "${AUR_PKGS[@]}"; do
     if ! pacman -Q "$pkg" &>/dev/null && ! yay -Q "$pkg" &>/dev/null; then
-        yay -S "$pkg" || true
+        yay -S --noconfirm "$pkg" || true
     fi
 done
 
