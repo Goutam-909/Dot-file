@@ -15,18 +15,6 @@ LOG_FILE="$HOME/dotfiles-install-$(date +%Y%m%d-%H%M%S).log"
 declare -a FAILED_PACKAGES=()
 declare -a FAILED_AUR=()
 
-# Cleanup function for interrupts
-cleanup_pacman_lock() {
-    if [[ -f /var/lib/pacman/db.lck ]]; then
-        echo -e "\n${YELLOW}Cleaning up pacman lock...${NC}"
-        sudo rm -f /var/lib/pacman/db.lck
-        echo -e "${GREEN}✅ Lock file removed${NC}"
-    fi
-}
-
-# Trap interrupts
-trap 'cleanup_pacman_lock; exit 130' INT TERM
-
 log_package() {
     local pkg="$1"
     local source="$2"
