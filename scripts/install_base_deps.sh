@@ -76,7 +76,7 @@ echo -e "${GREEN}==> Installing system utilities...${NC}"
 
 SYSTEM_UTILS=(
     base-devel git cmake meson ninja
-    jq yq python python-pip python-pipx uv unzip
+    jq yq python python-pip python-pipx uv unzip bc
 )
 
 for pkg in "${SYSTEM_UTILS[@]}"; do
