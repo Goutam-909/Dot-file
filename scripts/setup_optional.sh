@@ -14,16 +14,29 @@ declare -a FAILED_AUR=()
 declare -a INSTALLED_PACMAN=()
 declare -a INSTALLED_AUR=()
 
+# Cleanup function for interrupts
+cleanup_pacman_lock() {
+    if [[ -f /var/lib/pacman/db.lck ]]; then
+        echo -e "\n${YELLOW}Cleaning up pacman lock...${NC}"
+        sudo rm -f /var/lib/pacman/db.lck
+        echo -e "${GREEN}✅ Lock file removed${NC}"
+    fi
+}
+
+# Trap interrupts
+trap 'cleanup_pacman_lock; exit 130' INT TERM
+
 install_if_missing() {
     local pkg="$1"
     if ! pacman -Q "$pkg" &>/dev/null; then
         echo -e "${GREEN}Installing $pkg...${NC}"
-        if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
+        if sudo pacman -S --needed "$pkg"; then
             INSTALLED_PACMAN+=("$pkg")
             echo -e "${GREEN}✅ $pkg installed${NC}"
         else
             echo -e "${RED}✗ Failed to install $pkg${NC}"
             FAILED_PACKAGES+=("$pkg")
+            cleanup_pacman_lock
             return 1
         fi
     else
@@ -36,12 +49,13 @@ install_aur_if_missing() {
     local pkg="$1"
     if ! yay -Q "$pkg" &>/dev/null && ! pacman -Q "$pkg" &>/dev/null; then
         echo -e "${GREEN}Installing $pkg from AUR...${NC}"
-        if yay -S --noconfirm "$pkg" 2>/dev/null; then
+        if yay -S "$pkg"; then
             INSTALLED_AUR+=("$pkg")
             echo -e "${GREEN}✅ $pkg installed${NC}"
         else
             echo -e "${RED}✗ Failed to install $pkg${NC}"
             FAILED_AUR+=("$pkg")
+            cleanup_pacman_lock
             return 1
         fi
     else
