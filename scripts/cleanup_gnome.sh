@@ -30,7 +30,7 @@ GNOME_APPS=(
 
 for pkg in "${GNOME_APPS[@]}"; do
     if pacman -Q "$pkg" &>/dev/null; then
-        sudo pacman -Rns "$pkg" 2>/dev/null || sudo pacman -Rn "$pkg" 2>/dev/null || true
+        sudo pacman -Rns --noconfirm "$pkg" 2>/dev/null || sudo pacman -Rn --noconfirm "$pkg" 2>/dev/null || true
     fi
 done
 
@@ -43,7 +43,7 @@ fi
 # Clear cache
 read -rp "Clear package cache? (y/N): " clear_cache
 if [[ "$clear_cache" =~ ^[Yy]$ ]]; then
-    sudo pacman -Sc
+    sudo pacman -Sc --noconfirm
 fi
 
 echo -e "${GREEN}✅ Cleanup complete!${NC}"
