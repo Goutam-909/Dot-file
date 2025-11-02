@@ -12,6 +12,18 @@ GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; NC='\033[0m'
 declare -a FAILED_REMOVALS=()
 declare -a REMOVED_PACKAGES=()
 
+# Cleanup function for interrupts
+cleanup_pacman_lock() {
+    if [[ -f /var/lib/pacman/db.lck ]]; then
+        echo -e "\n${YELLOW}Cleaning up pacman lock...${NC}"
+        sudo rm -f /var/lib/pacman/db.lck
+        echo -e "${GREEN}✅ Lock file removed${NC}"
+    fi
+}
+
+# Trap interrupts
+trap 'cleanup_pacman_lock; exit 130' INT TERM
+
 echo -e "${YELLOW}=======================================${NC}"
 echo -e "${YELLOW}  GNOME Cleanup${NC}"
 echo -e "${YELLOW}=======================================${NC}"
@@ -73,8 +85,8 @@ GNOME_APPS_TO_REMOVE=(
 for pkg in "${GNOME_APPS_TO_REMOVE[@]}"; do
     if pacman -Q "$pkg" &>/dev/null; then
         echo -e "${YELLOW}Removing $pkg...${NC}"
-        if sudo pacman -Rns --noconfirm "$pkg" 2>/dev/null || \
-           sudo pacman -Rn --noconfirm "$pkg" 2>/dev/null; then
+        if sudo pacman -Rns "$pkg" 2>/dev/null || \
+           sudo pacman -Rn "$pkg" 2>/dev/null; then
             echo -e "${GREEN}✓ Removed $pkg${NC}"
             REMOVED_PACKAGES+=("$pkg")
         else
@@ -90,7 +102,7 @@ done
 echo -e "${GREEN}==> Cleaning orphaned packages...${NC}"
 orphans=$(pacman -Qdtq 2>/dev/null || true)
 if [[ -n "$orphans" ]]; then
-    if echo "$orphans" | sudo pacman -Rns --noconfirm - 2>/dev/null; then
+    if echo "$orphans" | sudo pacman -Rns -; then
         echo -e "${GREEN}✅ Orphaned packages removed${NC}"
     else
         echo -e "${YELLOW}⚠ Some orphaned packages couldn't be removed${NC}"
@@ -102,7 +114,7 @@ fi
 # Clear package cache (optional)
 read -rp "Clear package cache to save space? (y/N): " clear_cache
 if [[ "$clear_cache" =~ ^[Yy]$ ]]; then
-    if sudo pacman -Sc --noconfirm; then
+    if sudo pacman -Sc; then
         echo -e "${GREEN}✅ Package cache cleared${NC}"
     else
         echo -e "${RED}✗ Failed to clear package cache${NC}"
