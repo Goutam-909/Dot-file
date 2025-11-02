@@ -1,108 +1,47 @@
 #!/usr/bin/env bash
 # ===============================================
-#  Install Base Dependencies (GNOME-free)
-#  Essential GTK/GNOME libraries without bloat
+#  Install Base Dependencies
 # ===============================================
 
 set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; NC='\033[0m'
 
-# Error tracking
-declare -a FAILED_PACKAGES=()
-declare -a INSTALLED_PACMAN=()
-
-# Cleanup function for interrupts
-cleanup_pacman_lock() {
-    if [[ -f /var/lib/pacman/db.lck ]]; then
-        echo -e "\n${YELLOW}Cleaning up pacman lock...${NC}"
-        sudo rm -f /var/lib/pacman/db.lck
-        echo -e "${GREEN}✅ Lock file removed${NC}"
-    fi
-}
-
-# Trap interrupts
-trap 'cleanup_pacman_lock; exit 130' INT TERM
-
-install_if_missing() {
-    local pkg="$1"
-    if ! pacman -Q "$pkg" &>/dev/null; then
-        echo -e "${GREEN}Installing $pkg...${NC}"
-        if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
-            INSTALLED_PACMAN+=("$pkg")
-            echo -e "${GREEN}✅ $pkg installed${NC}"
-        else
-            echo -e "${RED}✗ Failed to install $pkg${NC}"
-            FAILED_PACKAGES+=("$pkg")
-            return 1
-        fi
-    else
-        echo -e "${YELLOW}✓ $pkg already installed${NC}"
-    fi
-    return 0
-}
+# Cleanup lock on interrupt
+trap 'sudo rm -f /var/lib/pacman/db.lck 2>/dev/null; exit 130' INT TERM
 
 echo -e "${GREEN}=======================================${NC}"
 echo -e "${GREEN}  Installing Base Dependencies${NC}"
 echo -e "${GREEN}=======================================${NC}"
 echo
 
-# Update system first
+# Update system
 echo -e "${GREEN}==> Updating system...${NC}"
-if ! sudo pacman -Syu --noconfirm; then
-    echo -e "${RED}✗ System update failed${NC}"
-    FAILED_PACKAGES+=("system-update")
-fi
+sudo pacman -Syu
 
-# Essential GTK/GNOME dependencies (without full GNOME)
-echo -e "${GREEN}==> Installing GTK and essential libraries...${NC}"
+# GTK/GNOME libraries
+echo -e "${GREEN}==> Installing GTK libraries...${NC}"
 
 BASE_GTK_DEPS=(
-    # GTK Libraries
-    gtk3 gtk4 
-    
-    # GLib and core GNOME libraries
-    glib2 glib-networking gobject-introspection
-    
-    # Theme engines and styling
-    adwaita-icon-theme hicolor-icon-theme
-    gtk-engine-murrine sassc
-    
-    # Desktop integration
+    gtk3 gtk4 glib2 glib-networking gobject-introspection
+    adwaita-icon-theme hicolor-icon-theme gtk-engine-murrine sassc
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-kde
-    xdg-user-dirs xdg-utils
-    
-    # GSettings backend
-    gsettings-desktop-schemas
-    dconf dconf-editor
-    
-    # Graphics and rendering
+    xdg-user-dirs xdg-utils gsettings-desktop-schemas dconf dconf-editor
     cairo pango librsvg gdk-pixbuf2
-    
-    # Fonts
     ttf-dejavu ttf-liberation noto-fonts noto-fonts-emoji
-    
-    # Audio/Video codecs for GTK apps
-    gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly
-    gstreamer-vaapi
-    
-    # File management libraries
+    gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gstreamer-vaapi
     gvfs gvfs-mtp gvfs-gphoto2 gvfs-afc
-    
-    # Authentication
-    polkit polkit-kde-agent
-    gnome-keyring libsecret
-    
-    # Network
+    polkit polkit-kde-agent gnome-keyring libsecret
     networkmanager network-manager-applet
 )
 
 for pkg in "${BASE_GTK_DEPS[@]}"; do
-    install_if_missing "$pkg" || true
+    if ! pacman -Q "$pkg" &>/dev/null; then
+        sudo pacman -S --needed --noconfirm "$pkg" || true
+    fi
 done
 
-# Qt dependencies for QuickShell
+# Qt dependencies
 echo -e "${GREEN}==> Installing Qt dependencies...${NC}"
 
 QT_DEPS=(
@@ -113,51 +52,37 @@ QT_DEPS=(
 )
 
 for pkg in "${QT_DEPS[@]}"; do
-    install_if_missing "$pkg" || true
+    if ! pacman -Q "$pkg" &>/dev/null; then
+        sudo pacman -S --needed --noconfirm "$pkg" || true
+    fi
 done
 
 # Wayland essentials
-echo -e "${GREEN}==> Installing Wayland essentials...${NC}"
+echo -e "${GREEN}==> Installing Wayland...${NC}"
 
 WAYLAND_DEPS=(
-    wayland wayland-protocols
-    xorg-xwayland
-    wl-clipboard wf-recorder
-    xdg-desktop-portal-hyprland
+    wayland wayland-protocols xorg-xwayland
+    wl-clipboard wf-recorder xdg-desktop-portal-hyprland
 )
 
 for pkg in "${WAYLAND_DEPS[@]}"; do
-    install_if_missing "$pkg" || true
+    if ! pacman -Q "$pkg" &>/dev/null; then
+        sudo pacman -S --needed --noconfirm "$pkg" || true
+    fi
 done
 
 # System utilities
 echo -e "${GREEN}==> Installing system utilities...${NC}"
 
 SYSTEM_UTILS=(
-    base-devel git
-    cmake meson ninja
-    jq yq
-    python python-pip python-pipx
-    uv
-    unzip  # For extracting fonts
+    base-devel git cmake meson ninja
+    jq yq python python-pip python-pipx uv unzip
 )
 
 for pkg in "${SYSTEM_UTILS[@]}"; do
-    install_if_missing "$pkg" || true
+    if ! pacman -Q "$pkg" &>/dev/null; then
+        sudo pacman -S --needed --noconfirm "$pkg" || true
+    fi
 done
 
-# Summary
-echo
-if [[ ${#INSTALLED_PACMAN[@]} -gt 0 ]]; then
-    echo -e "${GREEN}Installed packages (${#INSTALLED_PACMAN[@]}):${NC}"
-    printf '  ✓ %s\n' "${INSTALLED_PACMAN[@]}"
-fi
-
-if [[ ${#FAILED_PACKAGES[@]} -eq 0 ]]; then
-    echo -e "${GREEN}✅ Base dependencies installed successfully!${NC}"
-else
-    echo -e "${YELLOW}⚠ Some packages failed to install:${NC}"
-    printf '  ✗ %s\n' "${FAILED_PACKAGES[@]}"
-    echo
-    echo -e "${YELLOW}You can try installing failed packages manually later.${NC}"
-fi
+echo -e "${GREEN}✅ Base dependencies installed!${NC}"
