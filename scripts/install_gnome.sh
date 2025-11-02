@@ -18,7 +18,7 @@ echo
 sudo pacman -Syu
 
 if ! pacman -Q gnome &>/dev/null; then
-    sudo pacman -S --needed gnome gnome-extra
+    sudo pacman -S --needed --noconfirm gnome gnome-extra
 fi
 
 sudo systemctl enable gdm.service
