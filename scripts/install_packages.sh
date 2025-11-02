@@ -65,7 +65,7 @@ echo -e "${GREEN}==> Installing essential tools...${NC}"
 
 ESSENTIAL_TOOLS=(
     timeshift brightnessctl ddcutil
-    dolphin kdegraphics-thumbnailers ffmpegthumbs
+    dolphin kdegraphics-thumbnailers ffmpegthumbs ffmpegthumbnailer
     rofi-wayland kdialog ark starship fastfetch
     python-pywal python-pillow python-opencv
     nm-connection-editor plasma-nm
