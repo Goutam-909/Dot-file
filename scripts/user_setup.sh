@@ -62,13 +62,11 @@ echo -e "${GREEN}==> Setting file permissions...${NC}"
 
 # Make scripts executable
 find "$HOME/.config" "$HOME/.local" -type f \( \
-    -name "*.sh" -o -name "*.py" \
-) -exec chmod +x {} \; 2>/dev/null
+    -name "*.sh" -o -name "*.py" \) -exec chmod +x {} \; 2>/dev/null
 
 # Make specific config files readable (not executable)
 find "$HOME/.config" "$HOME/.local" -type f \( \
-    -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.css" -o -name "*.conf" \
-) -exec chmod 644 {} \; 2>/dev/null
+    -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.css" -o -name "*.conf" \) -exec chmod 644 {} \; 2>/dev/null
 
 echo -e "${GREEN}✅ Permissions set${NC}"
 MODIFICATIONS+=("Set file permissions")
