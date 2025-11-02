@@ -50,7 +50,7 @@ echo "  Installation Options"
 echo "======================================="
 echo
 echo "1) Fresh Minimal Install"
-echo "   └─ No desktop environment, install Hyprland + dependencies only"
+echo "   └─ Hyprland + Configuratiom"
 echo
 echo "2) Complete Desktop Environment"
 echo "   └─ Install GNOME first, then Hyprland configuration"
