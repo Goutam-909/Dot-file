@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===============================================
-#  Core Hyprland Package Installer
+#  Complete Hyprland Setup Installer
 # ===============================================
 
 set -e
@@ -11,22 +11,136 @@ GREEN='\033[1;32m'; YELLOW='\033[1;33m'; RED='\033[1;31m'; BLUE='\033[1;34m'; NC
 # Cleanup lock on interrupt
 trap 'sudo rm -f /var/lib/pacman/db.lck 2>/dev/null; exit 130' INT TERM
 
-echo -e "${GREEN}=======================================${NC}"
-echo -e "${GREEN}  Installing Core Packages${NC}"
-echo -e "${GREEN}=======================================${NC}"
+echo -e "${GREEN}============================================${NC}"
+echo -e "${GREEN}  Hyprland Complete Setup Installer${NC}"
+echo -e "${GREEN}============================================${NC}"
 echo
 
-# Check for yay
+# ===============================================
+#  Helper Functions
+# ===============================================
+
+# Get list of missing pacman packages
+get_missing_pkgs() {
+    local missing=()
+    for pkg in "$@"; do
+        if ! pacman -Q "$pkg" &>/dev/null; then
+            missing+=("$pkg")
+        fi
+    done
+    echo "${missing[@]}"
+}
+
+# Get list of missing AUR packages
+get_missing_aur_pkgs() {
+    local missing=()
+    for pkg in "$@"; do
+        if ! pacman -Q "$pkg" &>/dev/null && ! yay -Q "$pkg" &>/dev/null; then
+            missing+=("$pkg")
+        fi
+    done
+    echo "${missing[@]}"
+}
+
+# ===============================================
+#  System Update
+# ===============================================
+
+echo -e "${GREEN}==> Updating system...${NC}"
+sudo pacman -Syu --noconfirm
+
+# ===============================================
+#  Install yay AUR Helper
+# ===============================================
+
 if ! command -v yay &>/dev/null; then
     echo -e "${YELLOW}==> Installing yay AUR helper...${NC}"
     sudo pacman -S --needed --noconfirm git base-devel
     git clone https://aur.archlinux.org/yay.git /tmp/yay
-    cd /tmp/yay && makepkg -si
+    cd /tmp/yay && makepkg -si --noconfirm
     cd - >/dev/null
+    rm -rf /tmp/yay
     echo -e "${GREEN}✅ yay installed${NC}"
 fi
 
-# Core Hyprland packages
+# ===============================================
+#  GTK/GNOME Libraries
+# ===============================================
+
+echo -e "${GREEN}==> Installing GTK libraries...${NC}"
+
+BASE_GTK_DEPS=(
+    gtk3 gtk4 glib2 glib-networking gobject-introspection
+    adwaita-icon-theme hicolor-icon-theme gtk-engine-murrine sassc
+    xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-kde
+    xdg-user-dirs xdg-utils gsettings-desktop-schemas dconf dconf-editor
+    cairo pango librsvg gdk-pixbuf2
+    ttf-dejavu ttf-liberation noto-fonts noto-fonts-emoji
+    gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gstreamer-vaapi
+    gvfs gvfs-mtp gvfs-gphoto2 gvfs-afc
+    polkit polkit-kde-agent gnome-keyring libsecret
+    networkmanager network-manager-applet
+)
+
+MISSING_GTK=($(get_missing_pkgs "${BASE_GTK_DEPS[@]}"))
+if [ ${#MISSING_GTK[@]} -gt 0 ]; then
+    sudo pacman -S --needed --noconfirm "${MISSING_GTK[@]}"
+fi
+
+# ===============================================
+#  Qt Dependencies
+# ===============================================
+
+echo -e "${GREEN}==> Installing Qt dependencies...${NC}"
+
+QT_DEPS=(
+    qt5-base qt5-tools qt5-wayland
+    qt6-base qt6-declarative qt6-imageformats qt6-multimedia 
+    qt6-positioning qt6-quicktimeline qt6-sensors qt6-svg 
+    qt6-tools qt6-translations qt6-wayland qt6-5compat
+)
+
+MISSING_QT=($(get_missing_pkgs "${QT_DEPS[@]}"))
+if [ ${#MISSING_QT[@]} -gt 0 ]; then
+    sudo pacman -S --needed --noconfirm "${MISSING_QT[@]}"
+fi
+
+# ===============================================
+#  Wayland Essentials
+# ===============================================
+
+echo -e "${GREEN}==> Installing Wayland...${NC}"
+
+WAYLAND_DEPS=(
+    wayland wayland-protocols xorg-xwayland
+    wl-clipboard wf-recorder xdg-desktop-portal-hyprland
+)
+
+MISSING_WAYLAND=($(get_missing_pkgs "${WAYLAND_DEPS[@]}"))
+if [ ${#MISSING_WAYLAND[@]} -gt 0 ]; then
+    sudo pacman -S --needed --noconfirm "${MISSING_WAYLAND[@]}"
+fi
+
+# ===============================================
+#  System Utilities
+# ===============================================
+
+echo -e "${GREEN}==> Installing system utilities...${NC}"
+
+SYSTEM_UTILS=(
+    base-devel git cmake meson ninja
+    jq yq python python-pip python-pipx uv unzip bc
+)
+
+MISSING_UTILS=($(get_missing_pkgs "${SYSTEM_UTILS[@]}"))
+if [ ${#MISSING_UTILS[@]} -gt 0 ]; then
+    sudo pacman -S --needed --noconfirm "${MISSING_UTILS[@]}"
+fi
+
+# ===============================================
+#  Hyprland Core Packages
+# ===============================================
+
 echo -e "${GREEN}==> Installing Hyprland and graphics drivers...${NC}"
 
 HYPRLAND_CORE=(
@@ -38,13 +152,15 @@ HYPRLAND_CORE=(
     xorg-server xorg-xinit
 )
 
-for pkg in "${HYPRLAND_CORE[@]}"; do
-    if ! pacman -Q "$pkg" &>/dev/null; then
-        sudo pacman -S --needed --noconfirm "$pkg" || true
-    fi
-done
+MISSING_HYPRLAND=($(get_missing_pkgs "${HYPRLAND_CORE[@]}"))
+if [ ${#MISSING_HYPRLAND[@]} -gt 0 ]; then
+    sudo pacman -S --needed --noconfirm "${MISSING_HYPRLAND[@]}"
+fi
 
-# SDDM
+# ===============================================
+#  SDDM Display Manager
+# ===============================================
+
 echo -e "${GREEN}==> Installing SDDM...${NC}"
 if ! pacman -Q sddm &>/dev/null; then
     sudo pacman -S --needed --noconfirm sddm
@@ -52,18 +168,17 @@ fi
 
 if ! systemctl is-enabled sddm.service &>/dev/null; then
     sudo systemctl enable sddm.service
+    echo -e "${BLUE}SDDM enabled${NC}"
 fi
 
-# Terminal
-echo -e "${GREEN}==> Installing Kitty...${NC}"
-if ! pacman -Q kitty &>/dev/null; then
-    sudo pacman -S --needed --noconfirm kitty
-fi
+# ===============================================
+#  Terminal & Essential Tools
+# ===============================================
 
-# Essential tools
-echo -e "${GREEN}==> Installing essential tools...${NC}"
+echo -e "${GREEN}==> Installing terminal and essential tools...${NC}"
 
 ESSENTIAL_TOOLS=(
+    kitty
     timeshift brightnessctl ddcutil
     dolphin kdegraphics-thumbnailers ffmpegthumbs ffmpegthumbnailer
     rofi-wayland kdialog ark starship fastfetch
@@ -71,16 +186,17 @@ ESSENTIAL_TOOLS=(
     nm-connection-editor plasma-nm
     upower pipewire pipewire-pulse wireplumber
     cliphist xournalpp breeze syntax-highlighting
-    xdg-user-dirs
 )
 
-for pkg in "${ESSENTIAL_TOOLS[@]}"; do
-    if ! pacman -Q "$pkg" &>/dev/null; then
-        sudo pacman -S --needed --noconfirm "$pkg" || true
-    fi
-done
+MISSING_ESSENTIAL=($(get_missing_pkgs "${ESSENTIAL_TOOLS[@]}"))
+if [ ${#MISSING_ESSENTIAL[@]} -gt 0 ]; then
+    sudo pacman -S --needed --noconfirm "${MISSING_ESSENTIAL[@]}"
+fi
 
-# Flatpak
+# ===============================================
+#  Flatpak (Optional)
+# ===============================================
+
 echo
 read -rp "Install Flatpak and Flathub? (y/N): " install_flatpak
 if [[ "$install_flatpak" =~ ^[Yy]$ ]]; then
@@ -88,23 +204,29 @@ if [[ "$install_flatpak" =~ ^[Yy]$ ]]; then
         sudo pacman -S --needed --noconfirm flatpak
     fi
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+    echo -e "${GREEN}✅ Flatpak configured${NC}"
 fi
 
-# AUR packages
+# ===============================================
+#  AUR Packages
+# ===============================================
+
 echo -e "${GREEN}==> Installing AUR packages...${NC}"
 
 AUR_PKGS=(
     quickshell wlogout python-materialyoucolor matugen-bin
-    adw-gtk-theme-git breeze-plus ttf-twemoji mpvpaper
+    adw-gtk-theme-git breeze-plus mpvpaper
 )
 
-for pkg in "${AUR_PKGS[@]}"; do
-    if ! pacman -Q "$pkg" &>/dev/null && ! yay -Q "$pkg" &>/dev/null; then
-        yay -S --noconfirm "$pkg" || true
-    fi
-done
+MISSING_AUR=($(get_missing_aur_pkgs "${AUR_PKGS[@]}"))
+if [ ${#MISSING_AUR[@]} -gt 0 ]; then
+    yay -S --noconfirm "${MISSING_AUR[@]}"
+fi
 
-# JetBrains Mono Nerd Font
+# ===============================================
+#  JetBrains Mono Nerd Font
+# ===============================================
+
 echo -e "${GREEN}==> Installing JetBrains Mono Nerd Font...${NC}"
 
 JETBRAINS_FONT_DIR="$HOME/.local/share/fonts/JetBrainsMono"
@@ -115,9 +237,13 @@ if [[ ! -d "$JETBRAINS_FONT_DIR" ]] || [[ $(ls -A "$JETBRAINS_FONT_DIR" 2>/dev/n
     unzip -oq JetBrainsMono.zip
     rm JetBrainsMono.zip
     cd - >/dev/null
+    echo -e "${GREEN}✅ JetBrains Mono installed${NC}"
 fi
 
-# Material Symbols fonts
+# ===============================================
+#  Material Symbols Fonts
+# ===============================================
+
 echo -e "${GREEN}==> Installing Material Symbols fonts...${NC}"
 
 FONT_DIR="$HOME/.local/share/fonts/material-symbols"
@@ -145,11 +271,16 @@ if [[ ! -d "$FONT_DIR" ]] || [[ $(ls -A "$FONT_DIR" 2>/dev/null | wc -l) -lt 5 ]
     done
     
     cd - >/dev/null
+    echo -e "${GREEN}✅ Material Symbols installed${NC}"
 fi
 
+# Rebuild font cache
 fc-cache -f "$HOME/.local/share/fonts"
 
-# Python venv
+# ===============================================
+#  Python Virtual Environment
+# ===============================================
+
 echo -e "${GREEN}==> Setting up Python environment...${NC}"
 
 VENV_PATH="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/.venv"
@@ -167,10 +298,22 @@ if [[ -f "$REQ_FILE" ]]; then
 fi
 deactivate
 
-# kde-material-you-colors
-if ! pipx list | grep -q "kde-material-you-colors"; then
+# Install kde-material-you-colors
+if ! pipx list 2>/dev/null | grep -q "kde-material-you-colors"; then
     pipx install kde-material-you-colors || true
 fi
 
+# ===============================================
+#  Complete
+# ===============================================
+
 echo
-echo -e "${GREEN}✅ Installation complete!${NC}"
+echo -e "${GREEN}============================================${NC}"
+echo -e "${GREEN}✅ Installation Complete!${NC}"
+echo -e "${GREEN}============================================${NC}"
+echo
+echo -e "${BLUE}Next steps:${NC}"
+echo -e "  • Reboot your system"
+echo -e "  • SDDM will start automatically"
+echo -e "  • Select Hyprland from the session menu"
+echo
