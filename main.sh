@@ -41,7 +41,6 @@ read -rp "Select [1-7]: " choice
 
 case "$choice" in
   1)
-    bash "$SCRIPT_DIR/scripts/install_base_deps.sh"
     bash "$SCRIPT_DIR/scripts/install_packages.sh"
     bash "$SCRIPT_DIR/scripts/setup_optional.sh"
     bash "$SCRIPT_DIR/scripts/user_setup.sh"
@@ -61,7 +60,6 @@ case "$choice" in
     [[ "$remove_gnome" =~ ^[Yy]$ ]] && bash "$SCRIPT_DIR/scripts/cleanup_gnome.sh"
     ;;
   4)
-    bash "$SCRIPT_DIR/scripts/install_base_deps.sh"
     bash "$SCRIPT_DIR/scripts/install_packages.sh"
     bash "$SCRIPT_DIR/scripts/setup_optional.sh"
     ;;
@@ -69,7 +67,6 @@ case "$choice" in
     bash "$SCRIPT_DIR/scripts/user_setup.sh"
     ;;
   6)
-    bash "$SCRIPT_DIR/scripts/install_base_deps.sh"
     bash "$SCRIPT_DIR/scripts/install_packages.sh"
     bash "$SCRIPT_DIR/scripts/setup_optional.sh"
     bash "$SCRIPT_DIR/scripts/user_setup.sh"
