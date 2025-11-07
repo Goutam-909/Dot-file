@@ -71,7 +71,7 @@ echo -e "${GREEN}==> Installing GTK libraries...${NC}"
 
 BASE_GTK_DEPS=(
     gtk3 gtk4 glib2 glib-networking gobject-introspection
-    adwaita-icon-theme hicolor-icon-theme gtk-engine-murrine sassc
+    adwaita-icon-theme hicolor-icon-theme sassc
     xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-kde
     xdg-user-dirs xdg-utils gsettings-desktop-schemas dconf dconf-editor
     cairo pango librsvg gdk-pixbuf2
