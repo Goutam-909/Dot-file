@@ -1,0 +1,9 @@
+For Sleep To Weak up In HP Laptop Patch --
+sudo nano /etc/default/grub
+
+GRUB_CMDLINE_LINUX_DEFAULT=".... intel_idle.max_cstate=4" 
+
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+
+For defaulting Linux from Lts in arch edit this file  /etc/grub.d/10_linux
+https://bbs.archlinux.org/viewtopic.php?id=266583
