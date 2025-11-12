@@ -79,7 +79,7 @@ BASE_GTK_DEPS=(
     gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gstreamer-vaapi
     gvfs gvfs-mtp gvfs-gphoto2 gvfs-afc
     polkit polkit-kde-agent gnome-keyring libsecret
-    networkmanager network-manager-applet bluedevil cava slurp power-profiles-daemon
+    networkmanager network-manager-applet bluedevil cava slurp power-profiles-daemon grim
 )
 
 MISSING_GTK=($(get_missing_pkgs "${BASE_GTK_DEPS[@]}"))
